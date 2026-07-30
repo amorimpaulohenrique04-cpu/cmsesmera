@@ -3,9 +3,10 @@ import {structureTool} from 'sanity/structure'
 import {CaseIcon} from '@sanity/icons/Case'
 import {DiamondIcon} from '@sanity/icons/Diamond'
 import {businessSchemaTypes, siteSchemaTypes} from './schemaTypes'
-import {businessDashboardTool} from './dashboard/businessDashboardTool'
 import {businessStructure} from './structure/businessStructure'
 import {SITE_SINGLETON_TYPES, siteStructure} from './structure/siteStructure'
+import {EsmeraNavbar} from './studio/EsmeraNavbar'
+import {esmeraTheme} from './studio/esmeraTheme'
 
 const projectId = 'u60dwmhb'
 
@@ -17,10 +18,16 @@ export default defineConfig([
     basePath: '/site',
     projectId,
     dataset: 'production',
+    theme: esmeraTheme,
+    studio: {
+      components: {
+        navbar: EsmeraNavbar,
+      },
+    },
     plugins: [
       structureTool({
-        name: 'content',
-        title: 'Conteúdo',
+        name: 'cms',
+        title: 'CMS',
         structure: siteStructure,
       }),
     ],
@@ -43,11 +50,16 @@ export default defineConfig([
     basePath: '/business',
     projectId,
     dataset: 'business',
+    theme: esmeraTheme,
+    studio: {
+      components: {
+        navbar: EsmeraNavbar,
+      },
+    },
     plugins: [
-      businessDashboardTool(),
       structureTool({
-        name: 'business',
-        title: 'Business Desk',
+        name: 'cms',
+        title: 'CMS',
         structure: businessStructure,
       }),
     ],

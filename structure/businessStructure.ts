@@ -1,15 +1,24 @@
 import type {StructureResolver} from 'sanity/structure'
 import {ActivityIcon} from '@sanity/icons/Activity'
 import {BillIcon} from '@sanity/icons/Bill'
+import {DashboardIcon} from '@sanity/icons/Dashboard'
 import {HeartIcon} from '@sanity/icons/Heart'
 import {TaskIcon} from '@sanity/icons/Task'
 import {UserIcon} from '@sanity/icons/User'
 import {UsersIcon} from '@sanity/icons/Users'
+import {BusinessDashboard} from '../dashboard/BusinessDashboard'
+import {BusinessReports} from '../dashboard/BusinessReports'
 
 export const businessStructure: StructureResolver = (S) =>
   S.list()
-    .title('ESMÉRA / BUSINESS')
+    .title('ESMÉRA / NEGÓCIO')
     .items([
+      S.listItem()
+        .id('dashboard')
+        .title('Dashboard')
+        .icon(DashboardIcon)
+        .child(S.component(BusinessDashboard).title('Dashboard')),
+      S.divider(),
       S.listItem()
         .id('leads')
         .title('Leads')
@@ -68,5 +77,9 @@ export const businessStructure: StructureResolver = (S) =>
         ),
       S.documentTypeListItem('task').title('Tarefas').icon(TaskIcon),
       S.divider(),
-      S.documentTypeListItem('activity').title('Histórico de atividades').icon(ActivityIcon),
+      S.listItem()
+        .id('reports')
+        .title('Relatórios')
+        .icon(ActivityIcon)
+        .child(S.component(BusinessReports).title('Relatórios')),
     ])

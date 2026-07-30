@@ -1,6 +1,36 @@
 import {useEffect, useMemo, useState} from 'react'
-import {Badge, Box, Card, Flex, Grid, Heading, Spinner, Stack, Text} from '@sanity/ui'
+import {Spinner} from '@sanity/ui'
 import {useClient} from 'sanity'
+import {
+  DashboardPage,
+  DashboardShell,
+  EmptyState,
+  Eyebrow,
+  LoadingWrap,
+  MetricCard,
+  MetricDetail,
+  MetricLabel,
+  MetricsGrid,
+  MetricValue,
+  PageHeader,
+  PageSubtitle,
+  PageTitle,
+  Panel,
+  PanelTitle,
+  PipelineCell,
+  PipelineGrid,
+  PipelineLabel,
+  PipelineValue,
+  Row,
+  RowCopy,
+  RowMeta,
+  Rows,
+  RowTitle,
+  Section,
+  SectionHeading,
+  StatusPill,
+  TwoColumnGrid,
+} from './dashboardStyles'
 
 const API_VERSION = '2026-07-30'
 
@@ -95,7 +125,7 @@ function formatDate(value?: string) {
   })
 }
 
-function MetricCard({
+function Metric({
   label,
   value,
   detail,
@@ -105,28 +135,25 @@ function MetricCard({
   detail?: string
 }) {
   return (
-    <Card border padding={4} radius={3}>
-      <Stack space={3}>
-        <Text muted size={1} weight="semibold">
-          {label.toUpperCase()}
-        </Text>
-        <Heading size={3}>{value}</Heading>
-        {detail ? (
-          <Text muted size={1}>
-            {detail}
-          </Text>
-        ) : null}
-      </Stack>
-    </Card>
+    <MetricCard>
+      <MetricLabel>{label}</MetricLabel>
+      <MetricValue>{value}</MetricValue>
+      {detail ? <MetricDetail>{detail}</MetricDetail> : null}
+    </MetricCard>
   )
 }
 
 export function BusinessDashboard() {
-  const businessClient = useClient({apiVersion: API_VERSION})
-  const siteClient = useMemo(
-    () => businessClient.withConfig({dataset: 'production'}),
-    [businessClient],
+  const workspaceClient = useClient({apiVersion: API_VERSION})
+  const businessClient = useMemo(
+    () => workspaceClient.withConfig({dataset: 'business'}),
+    [workspaceClient],
   )
+  const siteClient = useMemo(
+    () => workspaceClient.withConfig({dataset: 'production'}),
+    [workspaceClient],
+  )
+
   const [business, setBusiness] = useState<DashboardData | null>(null)
   const [site, setSite] = useState<SiteData | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -158,26 +185,26 @@ export function BusinessDashboard() {
 
   if (error) {
     return (
-      <Box padding={5}>
-        <Card padding={4} radius={3} tone="critical">
-          <Stack space={3}>
-            <Heading size={2}>O painel ainda não conseguiu acessar os dados</Heading>
-            <Text>{error}</Text>
-            <Text size={1}>
-              Confirme que o dataset privado <strong>business</strong> foi criado e que o seu
-              usuário tem permissão de leitura.
-            </Text>
-          </Stack>
-        </Card>
-      </Box>
+      <DashboardPage>
+        <DashboardShell>
+          <Eyebrow>ESMÉRA / BUSINESS DESK</Eyebrow>
+          <PageTitle>O painel ainda não conseguiu acessar os dados.</PageTitle>
+          <PageSubtitle>
+            {error}. Confirme que o dataset privado business existe e que o usuário atual
+            possui permissão de leitura.
+          </PageSubtitle>
+        </DashboardShell>
+      </DashboardPage>
     )
   }
 
   if (!business || !site) {
     return (
-      <Flex align="center" height="fill" justify="center">
-        <Spinner muted />
-      </Flex>
+      <DashboardPage>
+        <LoadingWrap>
+          <Spinner muted />
+        </LoadingWrap>
+      </DashboardPage>
     )
   }
 
@@ -186,6 +213,7 @@ export function BusinessDashboard() {
   const averageTicket = salesWithValue.length ? salesTotal / salesWithValue.length : 0
   const finishedLeads = business.wonLeads + business.lostLeads
   const conversion = finishedLeads ? Math.round((business.wonLeads / finishedLeads) * 100) : 0
+
   const pipeline = [
     ['Novo', business.pipeline.new],
     ['Curadoria', business.pipeline.curation],
@@ -195,82 +223,106 @@ export function BusinessDashboard() {
   ] as const
 
   return (
-    <Box padding={[4, 4, 5]}>
-      <Stack space={5}>
-        <Stack space={2}>
-          <Heading size={4}>Bom dia.</Heading>
-          <Text muted>Visão rápida do site e do comercial</Text>
-        </Stack>
+    <DashboardPage>
+      <DashboardShell>
+        <PageHeader>
+          <div>
+            <Eyebrow>ESMÉRA / BUSINESS DESK</Eyebrow>
+            <PageTitle>Bom dia.</PageTitle>
+            <PageSubtitle>Visão rápida do site e do comercial.</PageSubtitle>
+          </div>
+        </PageHeader>
 
-        <Grid columns={[1, 2, 4]} gap={3}>
-          <MetricCard
+        <MetricsGrid>
+          <Metric
             label="Produtos ativos"
             value={site.activeProducts}
-            detail={`${site.drafts} rascunhos editoriais`}
+            detail={`${site.drafts} rascunhos editoriais no site`}
           />
-          <MetricCard label="Leads abertos" value={business.openLeads} detail="pipeline comercial" />
-          <MetricCard label="Vendas no mês" value={business.sales.length} detail={formatMoney(salesTotal)} />
-          <MetricCard
+          <Metric
+            label="Leads abertos"
+            value={business.openLeads}
+            detail="em acompanhamento no pipeline"
+          />
+          <Metric
+            label="Vendas no mês"
+            value={business.sales.length}
+            detail={formatMoney(salesTotal)}
+          />
+          <Metric
             label="Follow-ups"
             value={business.pendingFollowUps}
             detail="com prazo até amanhã"
           />
-        </Grid>
+        </MetricsGrid>
 
-        <Grid columns={[1, 1, 2]} gap={4}>
-          <Card border padding={4} radius={3}>
-            <Stack space={4}>
-              <Heading size={2}>Pipeline comercial</Heading>
-              <Grid columns={5} gap={2}>
-                {pipeline.map(([label, count]) => (
-                  <Card key={label} padding={3} radius={2} tone={label === 'Ganho' ? 'positive' : 'transparent'}>
-                    <Stack space={3}>
-                      <Heading size={2}>{count}</Heading>
-                      <Text muted size={1}>
-                        {label}
-                      </Text>
-                    </Stack>
-                  </Card>
+        <TwoColumnGrid>
+          <Panel>
+            <PanelTitle>Pipeline comercial</PanelTitle>
+            <PipelineGrid>
+              {pipeline.map(([label, count]) => (
+                <PipelineCell $active={label === 'Ganho'} key={label}>
+                  <PipelineValue>{count}</PipelineValue>
+                  <PipelineLabel>{label}</PipelineLabel>
+                </PipelineCell>
+              ))}
+            </PipelineGrid>
+          </Panel>
+
+          <Panel>
+            <PanelTitle>Pendências de hoje</PanelTitle>
+            {business.pendingTasks.length ? (
+              <Rows>
+                {business.pendingTasks.map((task) => (
+                  <Row key={task._id}>
+                    <RowCopy>
+                      <RowTitle>{task.title}</RowTitle>
+                      <RowMeta>{formatDate(task.dueAt)}</RowMeta>
+                    </RowCopy>
+                    <StatusPill
+                      $tone={
+                        task.priority === 'urgent' || task.priority === 'high'
+                          ? 'sand'
+                          : 'neutral'
+                      }
+                    >
+                      {task.priority || 'normal'}
+                    </StatusPill>
+                  </Row>
                 ))}
-              </Grid>
-            </Stack>
-          </Card>
+              </Rows>
+            ) : (
+              <EmptyState>Nenhuma tarefa vencendo até amanhã.</EmptyState>
+            )}
+          </Panel>
+        </TwoColumnGrid>
 
-          <Card border padding={4} radius={3}>
-            <Stack space={4}>
-              <Heading size={2}>Pendências de hoje</Heading>
-              {business.pendingTasks.length ? (
-                <Stack space={3}>
-                  {business.pendingTasks.map((task) => (
-                    <Flex align="center" gap={3} justify="space-between" key={task._id}>
-                      <Stack space={2}>
-                        <Text weight="medium">{task.title}</Text>
-                        <Text muted size={1}>
-                          {formatDate(task.dueAt)}
-                        </Text>
-                      </Stack>
-                      <Badge tone={task.priority === 'urgent' || task.priority === 'high' ? 'critical' : 'caution'}>
-                        {task.priority || 'normal'}
-                      </Badge>
-                    </Flex>
-                  ))}
-                </Stack>
-              ) : (
-                <Text muted>Nenhuma tarefa vencendo até amanhã.</Text>
-              )}
-            </Stack>
-          </Card>
-        </Grid>
-
-        <Stack space={3}>
-          <Heading size={2}>Indicadores do mês</Heading>
-          <Grid columns={[1, 2, 3]} gap={3}>
-            <MetricCard label="Conversão" value={`${conversion}%`} detail="ganhos entre leads encerrados" />
-            <MetricCard label="Ticket médio" value={formatMoney(averageTicket)} detail="vendas com valor registrado" />
-            <MetricCard label="Valor registrado" value={formatMoney(salesTotal)} detail="não substitui o financeiro" />
-          </Grid>
-        </Stack>
-      </Stack>
-    </Box>
+        <Section>
+          <SectionHeading>Indicadores do mês</SectionHeading>
+          <MetricsGrid>
+            <Metric
+              label="Conversão"
+              value={`${conversion}%`}
+              detail="ganhos entre leads encerrados"
+            />
+            <Metric
+              label="Ticket médio"
+              value={formatMoney(averageTicket)}
+              detail="vendas com valor registrado"
+            />
+            <Metric
+              label="Valor registrado"
+              value={formatMoney(salesTotal)}
+              detail="visão operacional; não substitui financeiro"
+            />
+            <Metric
+              label="Rascunhos"
+              value={site.drafts}
+              detail="conteúdo editorial ainda não publicado"
+            />
+          </MetricsGrid>
+        </Section>
+      </DashboardShell>
+    </DashboardPage>
   )
 }

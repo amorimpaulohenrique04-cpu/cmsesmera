@@ -1,6 +1,7 @@
 import type {ComponentType} from 'react'
 import type {StructureBuilder, StructureResolver} from 'sanity/structure'
 import {CogIcon} from '@sanity/icons/Cog'
+import {DashboardIcon} from '@sanity/icons/Dashboard'
 import {DocumentIcon} from '@sanity/icons/Document'
 import {EnvelopeIcon} from '@sanity/icons/Envelope'
 import {HomeIcon} from '@sanity/icons/Home'
@@ -8,6 +9,7 @@ import {MenuIcon} from '@sanity/icons/Menu'
 import {PackageIcon} from '@sanity/icons/Package'
 import {StackIcon} from '@sanity/icons/Stack'
 import {TagIcon} from '@sanity/icons/Tag'
+import {SiteDashboard} from '../dashboard/SiteDashboard'
 
 export const SITE_SINGLETON_TYPES = [
   'homePage',
@@ -34,8 +36,14 @@ function singleton(
 
 export const siteStructure: StructureResolver = (S) =>
   S.list()
-    .title('ESMÉRA')
+    .title('ESMÉRA / SITE')
     .items([
+      S.listItem()
+        .id('dashboard')
+        .title('Dashboard')
+        .icon(DashboardIcon)
+        .child(S.component(SiteDashboard).title('Dashboard')),
+      S.divider(),
       S.listItem()
         .id('siteContent')
         .title('Conteúdo do site')
@@ -51,7 +59,6 @@ export const siteStructure: StructureResolver = (S) =>
               singleton(S, 'navigation', 'navigation', 'Navegação', MenuIcon),
             ]),
         ),
-      S.divider(),
       S.documentTypeListItem('product').title('Produtos').icon(PackageIcon),
       S.documentTypeListItem('category').title('Categorias').icon(TagIcon),
       S.divider(),

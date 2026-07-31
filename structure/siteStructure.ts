@@ -36,21 +36,23 @@ function singleton(
 
 export const siteStructure: StructureResolver = (S) =>
   S.list()
-    .title('ESMÉRA / SITE')
+    .title('ESMÉRA')
     .items([
       S.listItem()
         .id('dashboard')
-        .title('Dashboard')
+        .title('Visão geral')
         .icon(DashboardIcon)
-        .child(S.component(SiteDashboard).title('Dashboard')),
+        .child(S.component(SiteDashboard).title('Visão geral')),
       S.divider(),
+      S.documentTypeListItem('product').title('Produtos').icon(PackageIcon),
+      S.documentTypeListItem('category').title('Categorias').icon(TagIcon),
       S.listItem()
-        .id('siteContent')
-        .title('Conteúdo do site')
+        .id('pages')
+        .title('Páginas')
         .icon(DocumentIcon)
         .child(
           S.list()
-            .title('Conteúdo do site')
+            .title('Páginas')
             .items([
               singleton(S, 'homePage', 'homePage', 'Home', HomeIcon),
               singleton(S, 'aboutPage', 'aboutPage', 'Sobre', DocumentIcon),
@@ -59,8 +61,6 @@ export const siteStructure: StructureResolver = (S) =>
               singleton(S, 'navigation', 'navigation', 'Navegação', MenuIcon),
             ]),
         ),
-      S.documentTypeListItem('product').title('Produtos').icon(PackageIcon),
-      S.documentTypeListItem('category').title('Categorias').icon(TagIcon),
       S.divider(),
       singleton(S, 'siteSettings', 'siteSettings', 'Configurações', CogIcon),
     ])

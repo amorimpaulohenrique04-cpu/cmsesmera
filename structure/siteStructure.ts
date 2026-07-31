@@ -9,7 +9,7 @@ import {MenuIcon} from '@sanity/icons/Menu'
 import {PackageIcon} from '@sanity/icons/Package'
 import {StackIcon} from '@sanity/icons/Stack'
 import {TagIcon} from '@sanity/icons/Tag'
-import {SiteDashboard} from '../dashboard/SiteDashboard'
+import {SiteDashboard} from '../dashboard/site/SiteDashboard'
 
 export const SITE_SINGLETON_TYPES = [
   'homePage',

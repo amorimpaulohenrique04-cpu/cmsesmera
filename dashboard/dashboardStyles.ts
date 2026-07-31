@@ -1,20 +1,52 @@
 import styled, {keyframes} from 'styled-components'
-import {esmeraTokens as t} from '../studio/esmeraTokens'
+
+const legacy = {
+  color: {
+    ink: '#111210',
+    graphite: '#262724',
+    emerald: '#2F6B54',
+    ivory: '#F3F0E8',
+    surface: '#FCFBF7',
+    sand: '#E9E5DC',
+    line: '#D7D1C6',
+    lineStrong: '#BEB7AB',
+    textSecondary: '#5F5D56',
+    warning: '#946527',
+    error: '#944742',
+  },
+  typography: {
+    page: {size: 28, lineHeight: 34, weight: 500},
+    section: {size: 22, lineHeight: 28, weight: 500},
+    component: {size: 15, lineHeight: 20, weight: 500},
+    body: {size: 14, lineHeight: 20, weight: 400},
+    bodySmall: {size: 13, lineHeight: 18, weight: 400},
+    label: {size: 12, lineHeight: 16, weight: 500},
+    caption: {size: 11, lineHeight: 15, weight: 400},
+  },
+  layout: {
+    contentMax: 1680,
+    pagePaddingDesktop: 32,
+    pagePaddingTablet: 24,
+    pagePaddingMobile: 16,
+  },
+  radius: {control: 2, status: 999},
+  motion: {easing: 'cubic-bezier(.2, .8, .2, 1)'},
+} as const
 
 export const palette = {
-  ink: t.color.ink,
-  graphite: t.color.graphite,
-  green: t.color.emerald,
+  ink: legacy.color.ink,
+  graphite: legacy.color.graphite,
+  green: legacy.color.emerald,
   greenSoft: '#E3ECE7',
   greenPale: '#F1F5F2',
-  ivory: t.color.ivory,
-  surface: t.color.surface,
-  line: t.color.line,
-  lineStrong: t.color.lineStrong,
-  muted: t.color.textSecondary,
-  sand: t.color.sand,
-  caution: t.color.warning,
-  error: t.color.error,
+  ivory: legacy.color.ivory,
+  surface: legacy.color.surface,
+  line: legacy.color.line,
+  lineStrong: legacy.color.lineStrong,
+  muted: legacy.color.textSecondary,
+  sand: legacy.color.sand,
+  caution: legacy.color.warning,
+  error: legacy.color.error,
 }
 
 export const DashboardPage = styled.div`
@@ -22,19 +54,19 @@ export const DashboardPage = styled.div`
   box-sizing: border-box;
   background: ${palette.ivory};
   color: ${palette.ink};
-  padding: ${t.layout.pagePaddingDesktop}px;
+  padding: ${legacy.layout.pagePaddingDesktop}px;
 
   @media (max-width: 1023px) {
-    padding: ${t.layout.pagePaddingTablet}px;
+    padding: ${legacy.layout.pagePaddingTablet}px;
   }
 
   @media (max-width: 767px) {
-    padding: ${t.layout.pagePaddingMobile}px;
+    padding: ${legacy.layout.pagePaddingMobile}px;
   }
 `
 
 export const DashboardShell = styled.div`
-  width: min(${t.layout.contentMax}px, 100%);
+  width: min(${legacy.layout.contentMax}px, 100%);
   margin: 0 auto;
 `
 
@@ -56,9 +88,9 @@ export const PageHeader = styled.header`
 export const Eyebrow = styled.div`
   margin-bottom: 8px;
   color: ${palette.green};
-  font-size: ${t.typography.caption.size}px;
+  font-size: ${legacy.typography.caption.size}px;
   font-weight: 500;
-  line-height: ${t.typography.caption.lineHeight}px;
+  line-height: ${legacy.typography.caption.lineHeight}px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 `
@@ -67,19 +99,19 @@ export const PageTitle = styled.h1`
   max-width: 900px;
   margin: 0;
   color: ${palette.ink};
-  font-size: ${t.typography.page.size}px;
-  font-weight: ${t.typography.page.weight};
+  font-size: ${legacy.typography.page.size}px;
+  font-weight: ${legacy.typography.page.weight};
   letter-spacing: 0;
-  line-height: ${t.typography.page.lineHeight}px;
+  line-height: ${legacy.typography.page.lineHeight}px;
 `
 
 export const PageSubtitle = styled.p`
   max-width: 720px;
   margin: 8px 0 0;
   color: ${palette.muted};
-  font-size: ${t.typography.body.size}px;
+  font-size: ${legacy.typography.body.size}px;
   font-weight: 400;
-  line-height: ${t.typography.body.lineHeight}px;
+  line-height: ${legacy.typography.body.lineHeight}px;
 `
 
 export const MetricsGrid = styled.div`
@@ -105,16 +137,16 @@ export const MetricCard = styled.section`
   min-height: 132px;
   box-sizing: border-box;
   border: 1px solid ${palette.line};
-  border-radius: ${t.radius.control}px;
+  border-radius: ${legacy.radius.control}px;
   background: ${palette.surface};
   padding: 24px;
 `
 
 export const MetricLabel = styled.div`
   color: ${palette.muted};
-  font-size: ${t.typography.label.size}px;
+  font-size: ${legacy.typography.label.size}px;
   font-weight: 500;
-  line-height: ${t.typography.label.lineHeight}px;
+  line-height: ${legacy.typography.label.lineHeight}px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 `
@@ -132,8 +164,8 @@ export const MetricValue = styled.div`
 export const MetricDetail = styled.div`
   margin-top: 8px;
   color: ${palette.muted};
-  font-size: ${t.typography.bodySmall.size}px;
-  line-height: ${t.typography.bodySmall.lineHeight}px;
+  font-size: ${legacy.typography.bodySmall.size}px;
+  line-height: ${legacy.typography.bodySmall.lineHeight}px;
 `
 
 export const TwoColumnGrid = styled.div`
@@ -152,7 +184,7 @@ export const TwoColumnGrid = styled.div`
 
 export const Panel = styled.section`
   border: 1px solid ${palette.line};
-  border-radius: ${t.radius.control}px;
+  border-radius: ${legacy.radius.control}px;
   background: ${palette.surface};
   padding: 24px;
 `
@@ -160,9 +192,9 @@ export const Panel = styled.section`
 export const PanelTitle = styled.h2`
   margin: 0 0 20px;
   color: ${palette.ink};
-  font-size: ${t.typography.component.size}px;
+  font-size: ${legacy.typography.component.size}px;
   font-weight: 500;
-  line-height: ${t.typography.component.lineHeight}px;
+  line-height: ${legacy.typography.component.lineHeight}px;
   letter-spacing: 0;
 `
 
@@ -171,7 +203,7 @@ export const PipelineGrid = styled.div`
   grid-template-columns: repeat(5, minmax(0, 1fr));
   overflow: hidden;
   border: 1px solid ${palette.line};
-  border-radius: ${t.radius.control}px;
+  border-radius: ${legacy.radius.control}px;
 
   @media (max-width: 680px) {
     grid-template-columns: 1fr;
@@ -244,9 +276,9 @@ export const RowCopy = styled.div`
 export const RowTitle = styled.div`
   overflow: hidden;
   color: ${palette.ink};
-  font-size: ${t.typography.bodySmall.size}px;
+  font-size: ${legacy.typography.bodySmall.size}px;
   font-weight: 500;
-  line-height: ${t.typography.bodySmall.lineHeight}px;
+  line-height: ${legacy.typography.bodySmall.lineHeight}px;
   text-overflow: ellipsis;
   white-space: nowrap;
 `
@@ -254,8 +286,8 @@ export const RowTitle = styled.div`
 export const RowMeta = styled.div`
   margin-top: 4px;
   color: ${palette.muted};
-  font-size: ${t.typography.caption.size}px;
-  line-height: ${t.typography.caption.lineHeight}px;
+  font-size: ${legacy.typography.caption.size}px;
+  line-height: ${legacy.typography.caption.lineHeight}px;
 `
 
 export const StatusPill = styled.span<{$tone?: 'green' | 'sand' | 'neutral' | 'error'}>`
@@ -272,7 +304,7 @@ export const StatusPill = styled.span<{$tone?: 'green' | 'sand' | 'neutral' | 'e
           : $tone === 'error'
             ? '#D8B8B4'
             : palette.line};
-  border-radius: ${t.radius.status}px;
+  border-radius: ${legacy.radius.status}px;
   background: ${({$tone}) =>
     $tone === 'green'
       ? palette.greenSoft
@@ -303,18 +335,18 @@ export const Section = styled.section`
 export const SectionHeading = styled.h2`
   margin: 0 0 16px;
   color: ${palette.ink};
-  font-size: ${t.typography.section.size}px;
+  font-size: ${legacy.typography.section.size}px;
   font-weight: 500;
-  line-height: ${t.typography.section.lineHeight}px;
+  line-height: ${legacy.typography.section.lineHeight}px;
 `
 
 export const EmptyState = styled.div`
   border: 1px dashed ${palette.lineStrong};
-  border-radius: ${t.radius.control}px;
+  border-radius: ${legacy.radius.control}px;
   color: ${palette.muted};
   padding: 24px;
-  font-size: ${t.typography.bodySmall.size}px;
-  line-height: ${t.typography.bodySmall.lineHeight}px;
+  font-size: ${legacy.typography.bodySmall.size}px;
+  line-height: ${legacy.typography.bodySmall.lineHeight}px;
 `
 
 export const ReportGrid = styled.div`
@@ -343,8 +375,8 @@ export const BarHeader = styled.div`
   gap: 16px;
   margin-bottom: 8px;
   color: ${palette.ink};
-  font-size: ${t.typography.bodySmall.size}px;
-  line-height: ${t.typography.bodySmall.lineHeight}px;
+  font-size: ${legacy.typography.bodySmall.size}px;
+  line-height: ${legacy.typography.bodySmall.lineHeight}px;
   font-variant-numeric: tabular-nums;
 `
 
@@ -389,9 +421,9 @@ export const SkeletonGrid = styled.div`
 export const SkeletonBlock = styled.div<{$height?: number}>`
   min-height: ${({$height}) => $height || 120}px;
   border: 1px solid ${palette.line};
-  border-radius: ${t.radius.control}px;
+  border-radius: ${legacy.radius.control}px;
   background: ${palette.sand};
-  animation: ${skeletonPulse} 1.2s ${t.motion.easing} infinite;
+  animation: ${skeletonPulse} 1.2s ${legacy.motion.easing} infinite;
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;

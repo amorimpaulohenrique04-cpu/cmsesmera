@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useState, type ReactNode} from 'react'
+import {useEffect, useMemo, useRef, useState, type ReactNode} from 'react'
 import type {SanityClient} from 'sanity'
 import {useIntentLink} from 'sanity/router'
 import styled from 'styled-components'
@@ -36,7 +36,12 @@ export function useQueryState<T>(
   isEmpty?: (data: T) => boolean,
 ) {
   const paramsKey = JSON.stringify(params)
-  const stableParams = useMemo(() => params, [paramsKey])
+  const stableParams = useMemo(
+    () => JSON.parse(paramsKey) as Record<string, unknown>,
+    [paramsKey],
+  )
+  const emptyCheckRef = useRef(isEmpty)
+  emptyCheckRef.current = isEmpty
   const [state, setState] = useState<LoadState<T>>({status: 'loading'})
   const [revision, setRevision] = useState(0)
 
@@ -49,7 +54,12 @@ export function useQueryState<T>(
       .then((data) => {
         if (!active) return
         const updatedAt = new Date()
-        setState(isEmpty?.(data) ? {status: 'empty', data, updatedAt} : {status: 'ready', data, updatedAt})
+        const empty = emptyCheckRef.current
+          ? emptyCheckRef.current(data)
+          : Array.isArray(data)
+            ? data.length === 0
+            : data === null || data === undefined
+        setState(empty ? {status: 'empty', data, updatedAt} : {status: 'ready', data, updatedAt})
       })
       .catch((reason: unknown) => {
         if (!active) return
@@ -60,7 +70,7 @@ export function useQueryState<T>(
     return () => {
       active = false
     }
-  }, [client, query, stableParams, isEmpty, revision])
+  }, [client, query, stableParams, revision])
 
   return {state, retry: () => setRevision((value) => value + 1)}
 }

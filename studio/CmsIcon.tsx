@@ -1,4 +1,3 @@
-import type {ComponentType, SVGProps} from 'react'
 import {ActivityIcon} from '@sanity/icons/Activity'
 import {BillIcon} from '@sanity/icons/Bill'
 import {CaseIcon} from '@sanity/icons/Case'
@@ -17,8 +16,6 @@ import {TaskIcon} from '@sanity/icons/Task'
 import {UserIcon} from '@sanity/icons/User'
 import {UsersIcon} from '@sanity/icons/Users'
 
-type IconComponent = ComponentType<SVGProps<SVGSVGElement>>
-
 type CmsIconProps = {
   name: string
   size?: number
@@ -26,7 +23,7 @@ type CmsIconProps = {
   title?: string
 }
 
-const sanityIcons: Record<string, IconComponent> = {
+const sanityIcons: Record<string, typeof DashboardIcon> = {
   dashboard: DashboardIcon,
   web: DiamondIcon,
   travel_explore: DiamondIcon,

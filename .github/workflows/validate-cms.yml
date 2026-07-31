@@ -23,7 +23,9 @@ jobs:
         run: npm ci
       - name: Typecheck
         run: npm run typecheck
-      - name: Lint
-        run: npm run lint
+      - name: Lint without warnings
+        run: npm run lint -- --max-warnings=0
+      - name: Operational source smoke
+        run: npm run validate:source
       - name: Build Studio
         run: npm run build

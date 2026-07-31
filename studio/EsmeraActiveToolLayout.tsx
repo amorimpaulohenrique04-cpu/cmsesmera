@@ -1,4 +1,3 @@
-import {useEffect} from 'react'
 import {type ActiveToolLayoutProps} from 'sanity'
 import styled from 'styled-components'
 import {esmeraTokens as t} from './esmeraTokens'
@@ -8,19 +7,56 @@ const Frame = styled.div`
   min-height: 0;
   height: 100%;
   background: ${t.color.surface};
+  color: ${t.color.ink};
+  font-family: ${t.typography.family};
 
-  &[data-esmera-tool='cms'] {
-    [data-ui='Pane'] { border-color: ${t.color.line} !important; background: ${t.color.surface}; }
-    [data-ui='Pane']:not(:last-of-type) { display: none !important; }
-    [data-ui='Pane']:last-of-type { flex: 1 1 100% !important; width: 100% !important; max-width: none !important; }
+  &[data-esmera-tool='documents'] {
+    [data-ui='Pane'] {
+      border-color: color-mix(in srgb, ${t.color.line} 72%, transparent);
+      background: ${t.color.surface};
+    }
+
+    [data-testid='document-panel-scroller'] {
+      background: ${t.color.surface};
+    }
+
+    [data-testid='document-panel-scroller'] > div {
+      width: min(1180px, 100%);
+      margin-inline: auto;
+    }
+
+    [data-testid='document-panel-scroller'] [data-ui='Card'] {
+      border-radius: ${t.radius.card}px;
+    }
+
+    [data-testid='document-panel-scroller'] [data-ui='TabList'] {
+      gap: 4px;
+      border-bottom: 1px solid ${t.color.line};
+      padding-inline: 8px;
+    }
+
+    [data-testid='document-panel-scroller'] [data-ui='Tab'] {
+      border-radius: ${t.radius.control}px ${t.radius.control}px 0 0;
+      font-family: ${t.typography.family};
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    [data-testid='document-panel-scroller'] label {
+      color: ${t.color.textSecondary};
+      font-family: ${t.typography.family};
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    [data-testid='document-panel-scroller'] input,
+    [data-testid='document-panel-scroller'] textarea,
+    [data-testid='document-panel-scroller'] select {
+      font-family: ${t.typography.family};
+    }
   }
 `
+
 export function EsmeraActiveToolLayout(props: ActiveToolLayoutProps) {
-  useEffect(() => {
-    if (props.activeTool.name !== 'cms' || typeof window === 'undefined') return
-    const path = window.location.pathname.replace(/\/$/, '')
-    if (path === '/site/cms') window.location.replace('/site/cms/dashboard')
-    if (path === '/business/cms') window.location.replace('/business/cms/customers')
-  }, [props.activeTool.name])
   return <Frame data-esmera-tool={props.activeTool.name}>{props.renderDefault(props)}</Frame>
 }

@@ -8,6 +8,7 @@ import {SITE_SINGLETON_TYPES, siteStructure} from './structure/siteStructure'
 import {EsmeraActiveToolLayout} from './studio/EsmeraActiveToolLayout'
 import {EsmeraNavbar} from './studio/EsmeraNavbar'
 import {EsmeraStudioLayout} from './studio/EsmeraStudioLayout'
+import {BusinessCmsTool, cmsToolRouter, SiteCmsTool} from './studio/cms/CmsTool'
 import {esmeraTheme} from './studio/esmeraTheme'
 
 const projectId = 'u60dwmhb'
@@ -28,10 +29,19 @@ export default defineConfig([
         navbar: EsmeraNavbar,
       },
     },
-    plugins: [
-      structureTool({
+    tools: [
+      {
         name: 'cms',
         title: 'CMS',
+        icon: DiamondIcon,
+        component: SiteCmsTool,
+        router: cmsToolRouter,
+      },
+    ],
+    plugins: [
+      structureTool({
+        name: 'documents',
+        title: 'Documentos',
         structure: siteStructure,
       }),
     ],
@@ -62,10 +72,19 @@ export default defineConfig([
         navbar: EsmeraNavbar,
       },
     },
-    plugins: [
-      structureTool({
+    tools: [
+      {
         name: 'cms',
         title: 'CMS',
+        icon: CaseIcon,
+        component: BusinessCmsTool,
+        router: cmsToolRouter,
+      },
+    ],
+    plugins: [
+      structureTool({
+        name: 'documents',
+        title: 'Documentos',
         structure: businessStructure,
       }),
     ],

@@ -1,3 +1,5 @@
+import console from 'node:console'
+import process from 'node:process'
 import {readFile} from 'node:fs/promises'
 
 const files = {

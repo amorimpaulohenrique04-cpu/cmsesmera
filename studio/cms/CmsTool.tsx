@@ -1,17 +1,19 @@
+import type {ReactNode} from 'react'
 import {route, useRouter} from 'sanity/router'
 import {
+  AfterSalesPage,
+  BusinessHealthGate,
+  CustomersPage,
+  PipelinePage,
+  ReportsPage,
+  SalesPage,
   SiteCategoriesPage,
   SiteContentPage,
   SiteDashboardPage,
+  SiteProductEditorPage,
   SiteProductsPage,
   SiteSettingsPage,
-} from '../../dashboard/stitch/SitePages'
-import {
-  AfterSalesPage,
-  CustomersPage,
-  ReportsPage,
-  SalesPage,
-} from '../../dashboard/stitch/BusinessPages'
+} from '../../dashboard/operational'
 
 export const cmsToolRouter = route.create('/', [
   route.create('/:view', [route.create('/:id')]),
@@ -35,12 +37,13 @@ function NotFound({workspace}: {workspace: 'site' | 'business'}) {
 
 export function SiteCmsTool() {
   const {state} = useRouter()
-  const {view} = state as CmsRouteState
+  const {view, id} = state as CmsRouteState
 
   switch (view || 'dashboard') {
     case 'dashboard': return <SiteDashboardPage />
     case 'content': return <SiteContentPage />
     case 'products': return <SiteProductsPage />
+    case 'product': return id ? <SiteProductEditorPage id={id} /> : <SiteProductsPage />
     case 'categories': return <SiteCategoriesPage />
     case 'settings': return <SiteSettingsPage />
     default: return <NotFound workspace="site" />
@@ -51,12 +54,15 @@ export function BusinessCmsTool() {
   const {state} = useRouter()
   const {view} = state as CmsRouteState
 
+  let page: ReactNode
   switch (view || 'customers') {
-    case 'customers': return <CustomersPage />
-    case 'sales':
-    case 'pipeline': return <SalesPage />
-    case 'after-sales': return <AfterSalesPage />
-    case 'reports': return <ReportsPage />
+    case 'customers': page = <CustomersPage />; break
+    case 'sales': page = <SalesPage />; break
+    case 'pipeline': page = <PipelinePage />; break
+    case 'after-sales': page = <AfterSalesPage />; break
+    case 'reports': page = <ReportsPage />; break
     default: return <NotFound workspace="business" />
   }
+
+  return <BusinessHealthGate>{page}</BusinessHealthGate>
 }

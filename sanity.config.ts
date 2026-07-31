@@ -6,6 +6,7 @@ import {businessSchemaTypes, siteSchemaTypes} from './schemaTypes'
 import {businessStructure} from './structure/businessStructure'
 import {SITE_SINGLETON_TYPES, siteStructure} from './structure/siteStructure'
 import {EsmeraNavbar} from './studio/EsmeraNavbar'
+import {EsmeraStudioLayout} from './studio/EsmeraStudioLayout'
 import {esmeraTheme} from './studio/esmeraTheme'
 
 const projectId = 'u60dwmhb'
@@ -21,6 +22,7 @@ export default defineConfig([
     theme: esmeraTheme,
     studio: {
       components: {
+        layout: EsmeraStudioLayout,
         navbar: EsmeraNavbar,
       },
     },
@@ -53,6 +55,7 @@ export default defineConfig([
     theme: esmeraTheme,
     studio: {
       components: {
+        layout: EsmeraStudioLayout,
         navbar: EsmeraNavbar,
       },
     },

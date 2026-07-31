@@ -1,5 +1,4 @@
 import {useEffect, useMemo, useState} from 'react'
-import {Spinner} from '@sanity/ui'
 import {useClient} from 'sanity'
 import {
   DashboardPage,
@@ -28,6 +27,8 @@ import {
   RowTitle,
   Section,
   SectionHeading,
+  SkeletonBlock,
+  SkeletonGrid,
   StatusPill,
   TwoColumnGrid,
 } from './dashboardStyles'
@@ -187,11 +188,11 @@ export function BusinessDashboard() {
     return (
       <DashboardPage>
         <DashboardShell>
-          <Eyebrow>ESMÉRA / BUSINESS DESK</Eyebrow>
-          <PageTitle>O painel ainda não conseguiu acessar os dados.</PageTitle>
+          <Eyebrow>BUSINESS DESK</Eyebrow>
+          <PageTitle>Não foi possível carregar a operação.</PageTitle>
           <PageSubtitle>
-            {error}. Confirme que o dataset privado business existe e que o usuário atual
-            possui permissão de leitura.
+            {error}. Confirme que o dataset privado business existe e que o usuário atual possui
+            permissão de leitura.
           </PageSubtitle>
         </DashboardShell>
       </DashboardPage>
@@ -201,9 +202,21 @@ export function BusinessDashboard() {
   if (!business || !site) {
     return (
       <DashboardPage>
-        <LoadingWrap>
-          <Spinner muted />
-        </LoadingWrap>
+        <DashboardShell>
+          <LoadingWrap aria-label="Carregando visão comercial">
+            <SkeletonBlock $height={74} />
+            <SkeletonGrid>
+              <SkeletonBlock />
+              <SkeletonBlock />
+              <SkeletonBlock />
+              <SkeletonBlock />
+            </SkeletonGrid>
+            <TwoColumnGrid>
+              <SkeletonBlock $height={320} />
+              <SkeletonBlock $height={320} />
+            </TwoColumnGrid>
+          </LoadingWrap>
+        </DashboardShell>
       </DashboardPage>
     )
   }
@@ -227,9 +240,9 @@ export function BusinessDashboard() {
       <DashboardShell>
         <PageHeader>
           <div>
-            <Eyebrow>ESMÉRA / BUSINESS DESK</Eyebrow>
-            <PageTitle>Bom dia.</PageTitle>
-            <PageSubtitle>Visão rápida do site e do comercial.</PageSubtitle>
+            <Eyebrow>HOJE</Eyebrow>
+            <PageTitle>Visão comercial</PageTitle>
+            <PageSubtitle>Leads, vendas e pendências que exigem uma próxima ação.</PageSubtitle>
           </div>
         </PageHeader>
 

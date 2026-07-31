@@ -1,5 +1,4 @@
 import {useEffect, useMemo, useState} from 'react'
-import {Spinner} from '@sanity/ui'
 import {useClient} from 'sanity'
 import {
   BarFill,
@@ -27,6 +26,8 @@ import {
   RowMeta,
   Rows,
   RowTitle,
+  SkeletonBlock,
+  SkeletonGrid,
 } from './dashboardStyles'
 
 const API_VERSION = '2026-07-30'
@@ -141,7 +142,7 @@ export function BusinessReports() {
     return (
       <DashboardPage>
         <DashboardShell>
-          <Eyebrow>ESMÉRA / RELATÓRIOS</Eyebrow>
+          <Eyebrow>RELATÓRIOS</Eyebrow>
           <PageTitle>Não foi possível carregar os indicadores.</PageTitle>
           <PageSubtitle>{error}</PageSubtitle>
         </DashboardShell>
@@ -152,9 +153,21 @@ export function BusinessReports() {
   if (!data) {
     return (
       <DashboardPage>
-        <LoadingWrap>
-          <Spinner muted />
-        </LoadingWrap>
+        <DashboardShell>
+          <LoadingWrap aria-label="Carregando relatórios">
+            <SkeletonBlock $height={74} />
+            <SkeletonGrid>
+              <SkeletonBlock />
+              <SkeletonBlock />
+              <SkeletonBlock />
+              <SkeletonBlock />
+            </SkeletonGrid>
+            <ReportGrid>
+              <SkeletonBlock $height={320} />
+              <SkeletonBlock $height={320} />
+            </ReportGrid>
+          </LoadingWrap>
+        </DashboardShell>
       </DashboardPage>
     )
   }
@@ -191,14 +204,14 @@ export function BusinessReports() {
       <DashboardShell>
         <PageHeader>
           <div>
-            <Eyebrow>ESMÉRA / RELATÓRIOS</Eyebrow>
-            <PageTitle>Poucos números. Números que ajudam a decidir.</PageTitle>
-            <PageSubtitle>Visão operacional do mês atual, sem tentar substituir um BI.</PageSubtitle>
+            <Eyebrow>MÊS ATUAL</Eyebrow>
+            <PageTitle>Relatórios</PageTitle>
+            <PageSubtitle>Indicadores operacionais que ajudam a decidir, sem ruído de BI genérico.</PageSubtitle>
           </div>
         </PageHeader>
 
         <MetricsGrid>
-          <Metric label="Leads no mês" value={data.leads.length} detail="entradas registradas" />
+          <Metric label="Leads" value={data.leads.length} detail="entradas registradas" />
           <Metric label="Conversão" value={`${conversion}%`} detail="entre leads encerrados" />
           <Metric label="Ticket médio" value={formatMoney(averageTicket)} detail="vendas com valor" />
           <Metric label="Vendas" value={data.sales.length} detail={formatMoney(salesTotal)} />

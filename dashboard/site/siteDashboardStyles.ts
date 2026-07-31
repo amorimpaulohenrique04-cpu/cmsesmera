@@ -54,6 +54,11 @@ export const PageHeader = styled.header`
   justify-content: space-between;
   gap: 24px;
   margin-bottom: 32px;
+
+  @media (max-width: 767px) {
+    align-items: flex-start;
+    margin-bottom: 24px;
+  }
 `
 
 export const Eyebrow = styled.div`
@@ -74,6 +79,11 @@ export const PageTitle = styled.h1`
   font-weight: 500;
   letter-spacing: -0.02em;
   line-height: 38px;
+
+  @media (max-width: 767px) {
+    font-size: 30px;
+    line-height: 36px;
+  }
 `
 
 export const PageSubtitle = styled.p`
@@ -110,6 +120,10 @@ export const MetricCardSurface = styled.section`
   background: ${palette.surface};
   box-shadow: ${t.shadow.card};
   padding: 24px;
+
+  @media (max-width: 767px) {
+    min-height: 180px;
+  }
 `
 
 export const MetricTop = styled.div`
@@ -176,6 +190,14 @@ export const MetricDetail = styled.div`
   font-size: 12px;
   font-weight: 400;
   line-height: 17px;
+
+  @media (max-width: 767px) {
+    max-width: 64%;
+  }
+
+  @media (max-width: 420px) {
+    max-width: 58%;
+  }
 `
 
 export const MetricVisual = styled.div<{$tone: 'sage' | 'orange' | 'neutral'}>`
@@ -242,6 +264,10 @@ export const Panel = styled.section`
   background: ${palette.surface};
   box-shadow: ${t.shadow.card};
   padding: 24px;
+
+  @media (max-width: 767px) {
+    padding: 20px;
+  }
 `
 
 export const PanelHeader = styled.div`
@@ -251,6 +277,10 @@ export const PanelHeader = styled.div`
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 16px;
+
+  @media (max-width: 420px) {
+    align-items: flex-start;
+  }
 `
 
 export const PanelTitle = styled.h2`
@@ -315,6 +345,12 @@ export const RecentRowLink = styled.a`
     border-color: ${palette.lineStrong};
     background: #FEFDFB;
     box-shadow: ${t.shadow.cardHover};
+  }
+
+  @media (max-width: 420px) {
+    gap: 10px;
+    padding-right: 10px;
+    padding-left: 10px;
   }
 `
 
@@ -426,6 +462,12 @@ export const PendingItem = styled.div`
   border-radius: 8px;
   background: #FEFDFB;
   padding: 10px 12px;
+
+  @media (max-width: 420px) {
+    gap: 10px;
+    padding-right: 10px;
+    padding-left: 10px;
+  }
 `
 
 export const PendingIcon = styled.span<{$tone?: 'sage' | 'orange'}>`
@@ -577,6 +619,10 @@ export const SkeletonHeader = styled.div`
   border-radius: 12px;
   background: ${palette.sand};
   animation: ${skeletonPulse} 1.2s ${t.motion.easing} infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 `
 
 export const SkeletonGrid = styled.div`
@@ -602,51 +648,8 @@ export const SkeletonBlock = styled.div<{$height?: number}>`
   background-size: 200% 100%;
   box-shadow: ${t.shadow.card};
   animation: ${skeletonPulse} 1.2s ${t.motion.easing} infinite;
-`
 
-@media (prefers-reduced-motion: reduce) {
-  ${SkeletonHeader},
-  ${SkeletonBlock} {
+  @media (prefers-reduced-motion: reduce) {
     animation: none;
   }
-}
-
-@media (max-width: 767px) {
-  ${PageHeader} {
-    margin-bottom: 24px;
-  }
-
-  ${PageTitle} {
-    font-size: 30px;
-    line-height: 36px;
-  }
-
-  ${MetricCardSurface} {
-    min-height: 180px;
-  }
-
-  ${MetricDetail} {
-    max-width: 64%;
-  }
-
-  ${Panel} {
-    padding: 20px;
-  }
-}
-
-@media (max-width: 420px) {
-  ${MetricDetail} {
-    max-width: 58%;
-  }
-
-  ${PanelHeader} {
-    align-items: flex-start;
-  }
-
-  ${PendingItem},
-  ${RecentRowLink} {
-    gap: 10px;
-    padding-right: 10px;
-    padding-left: 10px;
-  }
-}
+`

@@ -1,3 +1,4 @@
+import {useEffect, type ReactNode} from 'react'
 import {type LayoutProps} from 'sanity'
 import {useRouter} from 'sanity/router'
 import styled, {createGlobalStyle} from 'styled-components'
@@ -5,9 +6,11 @@ import {CmsShellProvider} from './CmsShellContext'
 import {esmeraTokens as t} from './esmeraTokens'
 import {StitchSidebar} from './stitch/StitchSidebar'
 
-const Global = createGlobalStyle`
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+const FONT_STYLESHEET_ID = 'esmera-stitch-fonts'
+const FONT_URL =
+  'https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap'
 
+const Global = createGlobalStyle`
   :root {
     color-scheme: light;
     --esmera-primary: ${t.color.primary};
@@ -28,9 +31,27 @@ const Global = createGlobalStyle`
     -webkit-font-smoothing: antialiased;
   }
 
+  button, input, select, textarea {
+    font: inherit;
+  }
+
   ::selection {
     background: ${t.color.primarySoft};
     color: ${t.color.ink};
+  }
+
+  :focus-visible {
+    outline: 2px solid ${t.color.primary};
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      scroll-behavior: auto !important;
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+    }
   }
 `
 
@@ -51,6 +72,22 @@ const Content = styled.div<{$withSidebar: boolean}>`
   }
 `
 
+function DocumentContract({children}: {children: ReactNode}) {
+  useEffect(() => {
+    document.documentElement.lang = 'pt-BR'
+
+    if (!document.getElementById(FONT_STYLESHEET_ID)) {
+      const link = document.createElement('link')
+      link.id = FONT_STYLESHEET_ID
+      link.rel = 'stylesheet'
+      link.href = FONT_URL
+      document.head.appendChild(link)
+    }
+  }, [])
+
+  return children
+}
+
 export function EsmeraStudioLayout(props: LayoutProps) {
   useRouter()
   const pathname = typeof window === 'undefined' ? '' : window.location.pathname
@@ -58,9 +95,11 @@ export function EsmeraStudioLayout(props: LayoutProps) {
 
   return (
     <CmsShellProvider>
-      <Global />
-      {isCmsTool ? <StitchSidebar /> : null}
-      <Content $withSidebar={isCmsTool}>{props.renderDefault(props)}</Content>
+      <DocumentContract>
+        <Global />
+        {isCmsTool ? <StitchSidebar /> : null}
+        <Content $withSidebar={isCmsTool}>{props.renderDefault(props)}</Content>
+      </DocumentContract>
     </CmsShellProvider>
   )
 }

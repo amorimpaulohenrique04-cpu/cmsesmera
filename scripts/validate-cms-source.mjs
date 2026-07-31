@@ -24,10 +24,15 @@ const operationalFiles = [
 ]
 
 const operational = (await Promise.all(operationalFiles.map((file) => readFile(file, 'utf8')))).join('\n')
+const hasTypedBusinessErrors =
+  files.shared.includes('export type LoadErrorCode') &&
+  files.shared.includes("'missing_dataset'") &&
+  files.shared.includes("'forbidden'") &&
+  files.shared.includes("'query_failed'")
 
 const assertions = [
   [files.config.includes("title: 'Admin técnico'"), 'Structure Tool precisa estar rotulado como Admin técnico.'],
-  [files.shared.includes("code: 'missing_dataset' | 'forbidden' | 'query_failed'"), 'Estados de erro do dataset precisam ser tipados.'],
+  [hasTypedBusinessErrors, 'Estados de erro do dataset precisam ser tipados.'],
   [files.shared.includes('Dados comerciais indisponíveis'), 'Falha Business precisa ser visível para o usuário.'],
   [files.dashboard.includes('Fonte Business indisponível'), 'Dashboard não pode converter indisponibilidade do Business em zero.'],
   [files.dashboard.includes('Não configurado'), 'Analytics sem fonte precisa ser mostrado como não configurado.'],

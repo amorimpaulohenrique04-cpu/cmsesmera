@@ -21,6 +21,11 @@ const MenuButton = styled.button`
   display:none;width:42px;height:42px;flex:0 0 42px;place-items:center;border:0;border-radius:999px;background:transparent;color:${t.color.textSecondary};cursor:pointer;
   &:hover{background:${t.color.surfaceContainer}} @media(max-width:720px){display:grid}
 `
+const BackToPortal = styled.a`
+  display:inline-flex;height:42px;align-items:center;gap:7px;border:1px solid ${t.color.line};border-radius:${t.radius.control}px;background:${t.color.surfaceLowest};color:${t.color.ink};padding:0 13px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;
+  &:hover{background:${t.color.surfaceLow}}
+  @media(max-width:760px){span:last-child{display:none};width:42px;padding:0;justify-content:center}
+`
 const SearchWrap = styled.div`position:relative;display:block;width:min(448px,46vw);@media(max-width:720px){width:100%}`
 const SearchIcon = styled.span`position:absolute;left:16px;top:50%;transform:translateY(-50%);color:${t.color.lineStrong};pointer-events:none;`
 const Search = styled.input`
@@ -42,17 +47,26 @@ const Avatar = styled.div`display:grid;width:40px;height:40px;place-items:center
 
 type SearchEntry={label:string;count:number;href:string}
 
+function studioEnv(name: string) {
+  const meta = import.meta as ImportMeta & {env?: Record<string, string | undefined>}
+  return meta.env?.[name]
+}
+
 export function EsmeraNavbar(_props: NavbarProps) {
   const workspace = useWorkspace()
   const client = useClient({apiVersion: API_VERSION})
   const currentUser = useCurrentUser()
   useRouter()
   const {toggleSidebar} = useCmsShell()
-  const createLink = useIntentLink({intent: 'create', params: {type: workspace.dataset === 'business' ? 'lead' : 'product'}})
+  const isBusinessWorkspace = workspace.name === 'business'
+  const createLink = useIntentLink({intent: 'create', params: {type: isBusinessWorkspace ? 'lead' : 'product'}})
   const pathname = typeof window === 'undefined' ? '' : window.location.pathname
   const isCmsTool = /\/(site|business)\/cms(?:\/|$)/.test(pathname)
+  const isTechnicalEditor = /\/(site|business)\/documents(?:\/|$)/.test(pathname)
+  const portalHref = isBusinessWorkspace ? '/business/cms/customers' : '/site/cms/dashboard'
   const initials = (currentUser?.name || 'Esméra').split(/\s+/).filter(Boolean).slice(0,2).map((part)=>part[0]).join('').toUpperCase()
-  const businessClient = useMemo(()=>client.withConfig({dataset:'business'}),[client])
+  const businessDataset = studioEnv('SANITY_STUDIO_BUSINESS_DATASET') || 'business'
+  const businessClient = useMemo(()=>client.withConfig({dataset:businessDataset}),[businessDataset,client])
   const [query,setQuery]=useState('')
   const [searching,setSearching]=useState(false)
   const [searchError,setSearchError]=useState(false)
@@ -66,29 +80,31 @@ export function EsmeraNavbar(_props: NavbarProps) {
     setSearching(true);setSearchError(false)
     const timer=window.setTimeout(()=>{
       const pattern=`*${needle}*`
-      const request=workspace.dataset==='business'
-        ? client.fetch<{customers:number;leads:number;sales:number}>(`{"customers":count(*[_type=="customer"&&name match $pattern]),"leads":count(*[_type=="lead"&&name match $pattern]),"sales":count(*[_type=="sale"&&(number match $pattern||customer->name match $pattern)])}`,{pattern})
-        : client.fetch<{products:number;categories:number}>(`{"products":count(*[_type=="product"&&(title match $pattern||code match $pattern)]),"categories":count(*[_type=="category"&&title match $pattern])}`,{pattern})
-      request.then((data)=>{
-        if(workspace.dataset==='business'){
-          const value=data as {customers:number;leads:number;sales:number}
-          setResults([
-            {label:'Clientes',count:value.customers,href:`/business/cms/customers?search=${encodeURIComponent(needle)}`},
-            {label:'Leads / Pipeline',count:value.leads,href:'/business/cms/pipeline'},
-            {label:'Vendas',count:value.sales,href:`/business/cms/sales?search=${encodeURIComponent(needle)}`},
-          ])
-        }else{
-          const value=data as {products:number;categories:number}
-          setResults([
-            {label:'Produtos',count:value.products,href:`/site/cms/products?search=${encodeURIComponent(needle)}`},
-            {label:'Categorias',count:value.categories,href:`/site/cms/categories?search=${encodeURIComponent(needle)}`},
-          ])
-        }
-        setSearching(false)
-      }).catch(()=>{setSearchError(true);setSearching(false);setResults([])})
+      if(isBusinessWorkspace){
+        client.fetch<{customers:number;leads:number;sales:number}>(`{"customers":count(*[_type=="customer"&&name match $pattern]),"leads":count(*[_type=="lead"&&name match $pattern]),"sales":count(*[_type=="sale"&&(number match $pattern||customer->name match $pattern)])}`,{pattern})
+          .then((value)=>{
+            setResults([
+              {label:'Clientes',count:value.customers,href:`/business/cms/customers?search=${encodeURIComponent(needle)}`},
+              {label:'Leads / Pipeline',count:value.leads,href:'/business/cms/pipeline'},
+              {label:'Vendas',count:value.sales,href:`/business/cms/sales?search=${encodeURIComponent(needle)}`},
+            ])
+            setSearching(false)
+          })
+          .catch(()=>{setSearchError(true);setSearching(false);setResults([])})
+      }else{
+        client.fetch<{products:number;categories:number}>(`{"products":count(*[_type=="product"&&(title match $pattern||code match $pattern)]),"categories":count(*[_type=="category"&&title match $pattern])}`,{pattern})
+          .then((value)=>{
+            setResults([
+              {label:'Produtos',count:value.products,href:`/site/cms/products?search=${encodeURIComponent(needle)}`},
+              {label:'Categorias',count:value.categories,href:`/site/cms/categories?search=${encodeURIComponent(needle)}`},
+            ])
+            setSearching(false)
+          })
+          .catch(()=>{setSearchError(true);setSearching(false);setResults([])})
+      }
     },250)
     return()=>window.clearTimeout(timer)
-  },[client,query,workspace.dataset])
+  },[client,isBusinessWorkspace,query])
 
   useEffect(()=>{
     businessClient.fetch<{tasks:number;followups:number}>(`{"tasks":count(*[_type=="task"&&status!="done"]),"followups":count(*[_type=="afterSale"&&count(followUps[status=="pending"])>0])}`).then((value)=>setNotificationCount(value.tasks+value.followups)).catch(()=>setNotificationCount(null))
@@ -97,6 +113,7 @@ export function EsmeraNavbar(_props: NavbarProps) {
   return <Bar>
     <Left>
       {isCmsTool?<MenuButton aria-label="Abrir menu" onClick={toggleSidebar} type="button"><CmsIcon name="menu" size={22}/></MenuButton>:null}
+      {isTechnicalEditor?<BackToPortal href={portalHref}><CmsIcon name="arrow_back" size={18}/><span>Voltar ao portal</span></BackToPortal>:null}
       <SearchWrap>
         <SearchIcon><CmsIcon name="search" size={21}/></SearchIcon>
         <Search aria-label="Pesquisar no CMS" placeholder="Pesquisar qualquer coisa..." value={query} onChange={(event)=>setQuery(event.target.value)} />

@@ -1,5 +1,5 @@
-import {type NavbarProps, useWorkspace} from 'sanity'
-import {useIntentLink} from 'sanity/router'
+import {type NavbarProps, useCurrentUser, useWorkspace} from 'sanity'
+import {useIntentLink, useRouter} from 'sanity/router'
 import styled from 'styled-components'
 import {CmsIcon} from './CmsIcon'
 import {useCmsShell} from './CmsShellContext'
@@ -154,15 +154,28 @@ const Avatar = styled.div`
 
 export function EsmeraNavbar(_props: NavbarProps) {
   const {dataset} = useWorkspace()
+  const currentUser = useCurrentUser()
+  useRouter()
   const {toggleSidebar} = useCmsShell()
   const createLink = useIntentLink({intent: 'create', params: {type: dataset === 'business' ? 'lead' : 'product'}})
+  const pathname = typeof window === 'undefined' ? '' : window.location.pathname
+  const isCmsTool = /\/(site|business)\/cms(?:\/|$)/.test(pathname)
+  const initials = (currentUser?.name || 'Esméra')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase()
 
   return (
     <Bar>
       <Left>
-        <MenuButton aria-label="Abrir menu" onClick={toggleSidebar} type="button">
-          <CmsIcon name="menu" size={22} />
-        </MenuButton>
+        {isCmsTool ? (
+          <MenuButton aria-label="Abrir menu" onClick={toggleSidebar} type="button">
+            <CmsIcon name="menu" size={22} />
+          </MenuButton>
+        ) : null}
         <SearchWrap>
           <CmsIcon name="search" size={21} />
           <Search aria-label="Pesquisar" placeholder="Pesquisar qualquer coisa..." />
@@ -176,7 +189,7 @@ export function EsmeraNavbar(_props: NavbarProps) {
         <IconButton aria-label="Notificações" type="button">
           <CmsIcon name="notifications" size={23} />
         </IconButton>
-        <Avatar title="Perfil Esméra">ES</Avatar>
+        <Avatar title={currentUser?.name || 'Perfil Esméra'}>{initials || 'ES'}</Avatar>
       </Actions>
     </Bar>
   )

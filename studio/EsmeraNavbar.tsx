@@ -57,12 +57,7 @@ export function EsmeraNavbar(_props: NavbarProps) {
     <Bar>
       <SearchWrap>
         <span className="material-symbols-outlined">search</span>
-        <Search aria-label="Pesquisar" placeholder="Pesquisar qualquer coisa..." onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            const value = e.currentTarget.value.trim()
-            if (value) window.location.href = `${dataset === 'business' ? '/business' : '/site'}/search?query=${encodeURIComponent(value)}`
-          }
-        }}/>
+        <Search aria-label="Pesquisar" placeholder="Pesquisar qualquer coisa..." />
       </SearchWrap>
       <Actions>
         <NewButton href={createLink.href} onClick={createLink.onClick}><span className="material-symbols-outlined">add</span>Novo</NewButton>

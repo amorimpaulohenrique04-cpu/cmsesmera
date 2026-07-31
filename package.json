@@ -11,6 +11,7 @@
     "dev": "sanity dev",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "validate:source": "node scripts/validate-cms-source.mjs",
     "start": "sanity start"
   },
   "keywords": [

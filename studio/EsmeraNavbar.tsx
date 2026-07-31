@@ -1,154 +1,69 @@
 import {type NavbarProps, useWorkspace} from 'sanity'
+import {useIntentLink} from 'sanity/router'
 import styled from 'styled-components'
 import {esmeraTokens as t} from './esmeraTokens'
 
-const NavbarShell = styled.div`
-  display: grid;
-  grid-template-columns: ${t.layout.sidebar}px minmax(0, 1fr);
-  min-height: ${t.layout.header}px;
-  border-bottom: 1px solid ${t.color.line};
-  background: ${t.color.surface};
-
-  @media (max-width: 1439px) {
-    grid-template-columns: 240px minmax(0, 1fr);
-    min-height: 72px;
-  }
-
-  @media (max-width: 1199px) {
-    grid-template-columns: 216px minmax(0, 1fr);
-  }
-
-  @media (max-width: 1023px) {
-    grid-template-columns: 84px minmax(0, 1fr);
-    min-height: 68px;
-  }
-
-  @media (max-width: 767px) {
-    grid-template-columns: 72px minmax(0, 1fr);
-    min-height: 64px;
-  }
-`
-
-const Brand = styled.div`
+const Bar = styled.header`
+  position: relative;
+  z-index: 50;
   display: flex;
-  min-width: 0;
   min-height: ${t.layout.header}px;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  border-right: 0;
-  background: ${t.color.ink};
-  padding: 0 24px;
-  color: ${t.color.surface};
-
-  @media (max-width: 1439px) {
-    min-height: 72px;
-    padding: 0 20px;
-  }
-
-  @media (max-width: 1023px) {
-    min-height: 68px;
-    justify-content: center;
-    padding: 0 12px;
-  }
-
-  @media (max-width: 767px) {
-    min-height: 64px;
-    padding: 0 10px;
-  }
+  gap: 24px;
+  border-bottom: 0;
+  background: color-mix(in srgb, ${t.color.surface} 84%, transparent);
+  padding: 0 ${t.layout.pagePaddingDesktop}px;
+  backdrop-filter: blur(14px);
+  @media (max-width: 1023px) { padding: 0 24px; }
+  @media (max-width: 720px) { min-height: 68px; padding: 0 16px; }
+`
+const SearchWrap = styled.label`
+  position: relative;
+  display: block;
+  width: min(448px, 46vw);
+  .material-symbols-outlined { position:absolute; left:16px; top:50%; transform:translateY(-50%); color:${t.color.lineStrong}; font-size:22px; }
+  @media (max-width: 680px) { width: 100%; }
+`
+const Search = styled.input`
+  width: 100%; height: 42px; border: 0 !important; border-radius: 999px !important;
+  background: ${t.color.surfaceLow}; color:${t.color.ink}; padding: 0 16px 0 48px;
+  font-family:${t.typography.family}; font-size:16px; line-height:24px; outline:0;
+  &:focus { box-shadow: 0 0 0 2px ${t.color.primary} !important; }
+  &::placeholder { color:${t.color.textSecondary}; opacity:.72; }
+`
+const Actions = styled.div`display:flex; align-items:center; gap:12px; @media(max-width:680px){display:none;}`
+const NewButton = styled.a`
+  display:inline-flex; height:42px; align-items:center; gap:8px; border-radius:999px;
+  background:${t.color.primary}; color:${t.color.onPrimary}; padding:0 22px;
+  font-size:13px; font-weight:600; text-decoration:none; transition:opacity .15s ease;
+  &:hover{opacity:.9} .material-symbols-outlined{font-size:20px}
+`
+const IconButton = styled.button`
+  position:relative; display:grid; width:42px; height:42px; place-items:center; border:0; border-radius:999px;
+  background:transparent; color:${t.color.textSecondary}; cursor:pointer;
+  &:hover{background:${t.color.surfaceContainer}} .material-symbols-outlined{font-size:24px}
+  &::after{content:'';position:absolute;right:9px;top:8px;width:7px;height:7px;border-radius:50%;background:${t.color.error};}
+`
+const Avatar = styled.div`
+  display:grid; width:40px; height:40px; place-items:center; border:2px solid ${t.color.primaryContainer}; border-radius:999px;
+  background:${t.color.primarySoft}; color:${t.color.primary}; font-family:${t.typography.headline}; font-size:13px; font-weight:700;
 `
 
-const BrandName = styled.div`
-  flex: 0 0 auto;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  line-height: 1;
-
-  @media (max-width: 767px) {
-    font-size: 11px;
-    letter-spacing: 0.06em;
-  }
-`
-
-const Workspace = styled.div`
-  min-width: 0;
-  overflow: hidden;
-  color: #b7b4ab;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.07em;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-
-  @media (max-width: 1023px) {
-    display: none;
-  }
-`
-
-const DefaultNavigation = styled.div`
-  min-width: 0;
-  min-height: ${t.layout.header}px;
-  overflow: hidden;
-  background: ${t.color.surface};
-
-  > * {
-    min-height: ${t.layout.header}px !important;
-    border: 0 !important;
-    background: ${t.color.surface} !important;
-    box-shadow: none !important;
-  }
-
-  [data-ui='Button'] {
-    min-height: 40px;
-    border-radius: ${t.radius.navItem}px !important;
-    box-shadow: none !important;
-  }
-
-  [data-ui='Button'][data-selected='true'],
-  [data-ui='Button'][aria-selected='true'],
-  [data-ui='Button'][aria-current='page'] {
-    background: ${t.color.emeraldSoft} !important;
-    color: ${t.color.ink} !important;
-  }
-
-  @media (max-width: 1439px) {
-    min-height: 72px;
-
-    > * {
-      min-height: 72px !important;
-    }
-  }
-
-  @media (max-width: 1023px) {
-    min-height: 68px;
-
-    > * {
-      min-height: 68px !important;
-    }
-  }
-
-  @media (max-width: 767px) {
-    min-height: 64px;
-
-    > * {
-      min-height: 64px !important;
-    }
-  }
-`
-
-export function EsmeraNavbar(props: NavbarProps) {
+export function EsmeraNavbar(_props: NavbarProps) {
   const {dataset} = useWorkspace()
-  const workspaceLabel = dataset === 'business' ? 'Business Desk / privado' : 'CMS / site'
-
+  const createLink = useIntentLink({intent: 'create', params: {type: dataset === 'business' ? 'lead' : 'product'}})
   return (
-    <NavbarShell>
-      <Brand>
-        <BrandName>ESMÉRA</BrandName>
-        <Workspace>{workspaceLabel}</Workspace>
-      </Brand>
-      <DefaultNavigation>{props.renderDefault(props)}</DefaultNavigation>
-    </NavbarShell>
+    <Bar>
+      <SearchWrap>
+        <span className="material-symbols-outlined">search</span>
+        <Search aria-label="Pesquisar" placeholder="Pesquisar qualquer coisa..." />
+      </SearchWrap>
+      <Actions>
+        <NewButton href={createLink.href} onClick={createLink.onClick}><span className="material-symbols-outlined">add</span>Novo</NewButton>
+        <IconButton aria-label="Notificações"><span className="material-symbols-outlined">notifications</span></IconButton>
+        <Avatar title="Perfil">ES</Avatar>
+      </Actions>
+    </Bar>
   )
 }

@@ -1,5 +1,8 @@
-import {useEffect, useState} from 'react'
+import {useEffect} from 'react'
+import {useRouter} from 'sanity/router'
 import styled from 'styled-components'
+import {CmsIcon} from '../CmsIcon'
+import {useCmsShell} from '../CmsShellContext'
 import {esmeraTokens as t} from '../esmeraTokens'
 
 const nav = [
@@ -14,25 +17,43 @@ const nav = [
   {label: 'Configurações', icon: 'settings', href: '/site/cms/settings', match: ['settings', 'siteSettings']},
 ]
 
-const Aside = styled.aside`
+const Aside = styled.aside<{$open: boolean}>`
   position: fixed;
   inset: 0 auto 0 0;
-  z-index: 1000;
+  z-index: 1100;
   display: flex;
   width: ${t.layout.sidebar}px;
-  height: 100vh;
+  height: 100dvh;
   flex-direction: column;
   gap: 8px;
-  border-right: 1px solid ${t.color.line};
+  border-right: 1px solid color-mix(in srgb, ${t.color.line} 72%, transparent);
   background: ${t.color.surface};
   padding: 24px 0;
+  transition: transform ${t.motion.drawer} ${t.motion.easing};
 
-  @media (max-width: 1023px) {
-    width: 84px;
+  @media (max-width: 1023px) and (min-width: 721px) {
+    width: ${t.layout.sidebarTablet}px;
   }
+
   @media (max-width: 720px) {
-    width: 72px;
+    width: min(${t.layout.sidebar}px, 86vw);
+    transform: translateX(${({$open}) => ($open ? '0' : '-105%')});
+    box-shadow: ${({$open}) => ($open ? t.shadow.modal : 'none')};
   }
+`
+
+const Overlay = styled.button<{$open: boolean}>`
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: none;
+  border: 0;
+  background: rgba(17, 28, 45, .22);
+  opacity: ${({$open}) => ($open ? 1 : 0)};
+  pointer-events: ${({$open}) => ($open ? 'auto' : 'none')};
+  transition: opacity ${t.motion.drawer} ${t.motion.easing};
+
+  @media (max-width: 720px) { display: block; }
 `
 
 const Brand = styled.a`
@@ -43,11 +64,12 @@ const Brand = styled.a`
   color: ${t.color.primary};
   text-decoration: none;
 
-  @media (max-width: 1023px) {
+  @media (max-width: 1023px) and (min-width: 721px) {
     justify-content: center;
     margin: 0 0 30px;
   }
 `
+
 const BrandMark = styled.span`
   display: grid;
   width: 40px;
@@ -57,28 +79,30 @@ const BrandMark = styled.span`
   border-radius: 12px;
   background: ${t.color.primaryContainer};
   color: ${t.color.onPrimaryContainer};
-  font-family: 'Material Symbols Outlined';
-  font-size: 24px;
-  font-variation-settings: 'FILL' 1;
 `
+
 const BrandCopy = styled.span`
   min-width: 0;
-  @media (max-width: 1023px) { display: none; }
+  @media (max-width: 1023px) and (min-width: 721px) { display: none; }
 `
+
 const BrandTitle = styled.strong`
   display: block;
-  font-family: ${t.typography.headline};
-  font-size: 20px;
-  line-height: 28px;
+  font-family: ${t.typography.family};
+  font-size: 19px;
+  line-height: 26px;
+  font-weight: 600;
 `
+
 const BrandMeta = styled.small`
   display: block;
   margin-top: 1px;
   color: ${t.color.textSecondary};
-  font-size: 13px;
+  font-size: 12px;
   line-height: 16px;
-  opacity: .7;
+  opacity: .72;
 `
+
 const Nav = styled.nav`
   display: flex;
   min-height: 0;
@@ -89,6 +113,7 @@ const Nav = styled.nav`
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
 `
+
 const NavLink = styled.a<{$active?: boolean}>`
   position: relative;
   display: flex;
@@ -97,7 +122,7 @@ const NavLink = styled.a<{$active?: boolean}>`
   gap: 12px;
   margin: 0 8px;
   border-left: 4px solid ${({$active}) => ($active ? t.color.primary : 'transparent')};
-  border-radius: 12px;
+  border-radius: ${t.radius.navItem}px;
   background: ${({$active}) => ($active ? t.color.primaryContainer : 'transparent')};
   color: ${({$active}) => ($active ? t.color.onPrimaryContainer : t.color.textSecondary)};
   padding: 0 14px 0 12px;
@@ -106,61 +131,73 @@ const NavLink = styled.a<{$active?: boolean}>`
   line-height: 16px;
   text-decoration: none;
   transition: background-color .16s ease, color .16s ease, transform .12s ease;
+
   &:hover { background: ${({$active}) => ($active ? t.color.primaryContainer : t.color.surfaceHigh)}; }
   &:active { transform: scale(.985); }
-  .material-symbols-outlined {
-    width: 24px;
-    flex: 0 0 24px;
-    font-size: 24px;
-    font-variation-settings: 'FILL' ${({$active}) => ($active ? 1 : 0)};
-  }
-  @media (max-width: 1023px) {
+
+  > svg { width: 22px; height: 22px; flex: 0 0 22px; }
+
+  @media (max-width: 1023px) and (min-width: 721px) {
     justify-content: center;
     padding: 0;
-    span:last-child { display: none; }
+    [data-nav-label] { display: none; }
   }
 `
+
 const Bottom = styled.div`
   display: flex;
   flex-direction: column;
   gap: 4px;
-  border-top: 1px solid ${t.color.line};
+  border-top: 1px solid color-mix(in srgb, ${t.color.line} 72%, transparent);
   padding-top: 16px;
 `
 
 function activeFor(path: string, matches: string[]) {
   if (path.includes('/intent/')) {
-    return matches.some((m) => path.toLowerCase().includes(m.toLowerCase()))
+    return matches.some((match) => path.toLowerCase().includes(match.toLowerCase()))
   }
-  return matches.some((m) => path.split(/[/?;]/).some((part) => part === m))
+  return matches.some((match) => path.split(/[/?;]/).some((part) => part === match))
 }
 
 export function StitchSidebar() {
-  const [path, setPath] = useState(() => (typeof window === 'undefined' ? '' : window.location.pathname + window.location.search))
+  const {state} = useRouter()
+  const {sidebarOpen, setSidebarOpen} = useCmsShell()
+  const path = typeof window === 'undefined' ? '' : `${window.location.pathname}${window.location.search}`
+
   useEffect(() => {
-    const sync = () => setPath(window.location.pathname + window.location.search)
-    window.addEventListener('popstate', sync)
-    const interval = window.setInterval(sync, 500)
-    return () => { window.removeEventListener('popstate', sync); window.clearInterval(interval) }
-  }, [])
+    setSidebarOpen(false)
+  }, [state, setSidebarOpen])
 
   return (
-    <Aside aria-label="Navegação principal">
-      <Brand href="/site/cms/dashboard">
-        <BrandMark>eco</BrandMark>
-        <BrandCopy><BrandTitle>Esméra CMS</BrandTitle><BrandMeta>Management Portal</BrandMeta></BrandCopy>
-      </Brand>
-      <Nav>
-        {nav.map((item) => (
-          <NavLink key={item.label} href={item.href} $active={activeFor(path, item.match)}>
-            <span className="material-symbols-outlined">{item.icon}</span><span>{item.label}</span>
+    <>
+      <Overlay $open={sidebarOpen} aria-label="Fechar menu" onClick={() => setSidebarOpen(false)} type="button" />
+      <Aside $open={sidebarOpen} aria-label="Navegação principal">
+        <Brand href="/site/cms/dashboard">
+          <BrandMark><CmsIcon name="eco" size={23} /></BrandMark>
+          <BrandCopy>
+            <BrandTitle>Esméra CMS</BrandTitle>
+            <BrandMeta>Management Portal</BrandMeta>
+          </BrandCopy>
+        </Brand>
+        <Nav>
+          {nav.map((item) => (
+            <NavLink key={item.label} href={item.href} $active={activeFor(path, item.match)}>
+              <CmsIcon name={item.icon} size={22} />
+              <span data-nav-label>{item.label}</span>
+            </NavLink>
+          ))}
+        </Nav>
+        <Bottom>
+          <NavLink href="mailto:suporte@esmera.com.br">
+            <CmsIcon name="help" size={22} />
+            <span data-nav-label>Suporte</span>
           </NavLink>
-        ))}
-      </Nav>
-      <Bottom>
-        <NavLink href="mailto:suporte@esmera.com.br"><span className="material-symbols-outlined">help</span><span>Suporte</span></NavLink>
-        <NavLink href="/logout"><span className="material-symbols-outlined">logout</span><span>Sair</span></NavLink>
-      </Bottom>
-    </Aside>
+          <NavLink href="/logout">
+            <CmsIcon name="logout" size={22} />
+            <span data-nav-label>Sair</span>
+          </NavLink>
+        </Bottom>
+      </Aside>
+    </>
   )
 }

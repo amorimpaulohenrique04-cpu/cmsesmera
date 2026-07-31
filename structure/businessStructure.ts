@@ -11,13 +11,13 @@ import {BusinessReports} from '../dashboard/BusinessReports'
 
 export const businessStructure: StructureResolver = (S) =>
   S.list()
-    .title('ESMÉRA / NEGÓCIO')
+    .title('ESMÉRA')
     .items([
       S.listItem()
         .id('dashboard')
-        .title('Dashboard')
+        .title('Visão geral')
         .icon(DashboardIcon)
-        .child(S.component(BusinessDashboard).title('Dashboard')),
+        .child(S.component(BusinessDashboard).title('Visão geral')),
       S.divider(),
       S.listItem()
         .id('leads')

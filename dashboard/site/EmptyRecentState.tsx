@@ -1,4 +1,4 @@
-import type {MouseEventHandler} from 'react'
+import {useIntentLink} from 'sanity/router'
 import {
   EmptyCopy,
   EmptyIllustration,
@@ -8,12 +8,9 @@ import {
   PrimaryAction,
 } from './siteDashboardStyles'
 
-type EmptyRecentStateProps = {
-  href: string
-  onClick: MouseEventHandler<HTMLAnchorElement>
-}
+export function EmptyRecentState() {
+  const createProductLink = useIntentLink({intent: 'create', params: {type: 'product'}})
 
-export function EmptyRecentState({href, onClick}: EmptyRecentStateProps) {
   return (
     <EmptyStateBox>
       <EmptyStateInner>
@@ -28,7 +25,7 @@ export function EmptyRecentState({href, onClick}: EmptyRecentStateProps) {
         <EmptyCopy>
           Comece adicionando uma peça ao catálogo para vê-la aparecer aqui.
         </EmptyCopy>
-        <PrimaryAction href={href} onClick={onClick}>
+        <PrimaryAction href={createProductLink.href} onClick={createProductLink.onClick}>
           <span aria-hidden="true">+</span>
           Adicionar peça
         </PrimaryAction>

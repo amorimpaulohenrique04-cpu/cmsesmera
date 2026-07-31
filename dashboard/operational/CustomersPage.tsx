@@ -1,4 +1,4 @@
-import {useMemo, useState} from 'react'
+import {useState} from 'react'
 import {useClient} from 'sanity'
 import styled from 'styled-components'
 import {esmeraTokens as t} from '../../studio/esmeraTokens'
@@ -63,15 +63,17 @@ export function CustomersPage() {
   const [selected, setSelected] = useState('')
   const [q, setQ] = useState(() => new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search).get('search') || '')
 
-  if (customersQuery.state.status === 'loading') return <Page><Shell><Header><div><Title>Clientes</Title><Subtitle>Relacionamento, histórico e oportunidades em uma única tela.</Subtitle></div></Header><LoadingState /></Shell></Page>
-  if (customersQuery.state.status === 'error') return <Page><Shell><Header><div><Title>Clientes</Title><Subtitle>Relacionamento, histórico e oportunidades em uma única tela.</Subtitle></div></Header><ErrorState code={customersQuery.state.code} detail={customersQuery.state.message} onRetry={customersQuery.retry} /></Shell></Page>
-
-  const customers = customersQuery.state.data
-  const filtered = useMemo(() => customers.filter((customer) => `${customer.name || ''} ${customer.phone || ''} ${customer.email || ''} ${(customer.tags || []).join(' ')}`.toLowerCase().includes(q.toLowerCase())), [customers, q])
+  const customers = customersQuery.state.status === 'ready' || customersQuery.state.status === 'empty'
+    ? customersQuery.state.data
+    : []
+  const filtered = customers.filter((customer) => `${customer.name || ''} ${customer.phone || ''} ${customer.email || ''} ${(customer.tags || []).join(' ')}`.toLowerCase().includes(q.toLowerCase()))
   const customer = customers.find((item) => item._id === selected) || filtered[0]
   const selectedId = customer?._id || '__none__'
   const salesQuery = useQueryState<Sale[]>(client, SALES_QUERY, {id: selectedId})
   const sales = salesQuery.state.status === 'ready' || salesQuery.state.status === 'empty' ? salesQuery.state.data : []
+
+  if (customersQuery.state.status === 'loading') return <Page><Shell><Header><div><Title>Clientes</Title><Subtitle>Relacionamento, histórico e oportunidades em uma única tela.</Subtitle></div></Header><LoadingState /></Shell></Page>
+  if (customersQuery.state.status === 'error') return <Page><Shell><Header><div><Title>Clientes</Title><Subtitle>Relacionamento, histórico e oportunidades em uma única tela.</Subtitle></div></Header><ErrorState code={customersQuery.state.code} detail={customersQuery.state.message} onRetry={customersQuery.retry} /></Shell></Page>
 
   return (
     <Page><Shell>
@@ -83,7 +85,7 @@ export function CustomersPage() {
         {customer ? <Card><CardHeader><div style={{display: 'flex', alignItems: 'center', gap: 12}}><Initial style={{width: 54, height: 54, flexBasis: 54}}>{initials(customer.name)}</Initial><div><CardTitle>{customer.name || 'Cliente'}</CardTitle><CardSub>{[customer.city, customer.state].filter(Boolean).join(' · ') || 'Relacionamento Esméra'}</CardSub></div></div><SecondaryIntentAction type="customer" id={customer._id}><MaterialIcon>edit</MaterialIcon>Editar</SecondaryIntentAction></CardHeader>
           <InfoGrid><div><InfoLabel>Telefone</InfoLabel><InfoValue>{customer.phone || '—'}</InfoValue></div><div><InfoLabel>E-mail</InfoLabel><InfoValue>{customer.email || '—'}</InfoValue></div><div><InfoLabel>Compras</InfoLabel><InfoValue>{customer.salesCount || 0}</InfoValue></div><div><InfoLabel>Origem</InfoLabel><InfoValue>{customer.sourceLead?.source || '—'}</InfoValue></div></InfoGrid>
           <Divider /><InfoLabel>Interesse atual</InfoLabel><Chips style={{marginTop: 10}}>{customer.preferences?.length ? customer.preferences.map((preference) => <Chip key={preference}>{preference}</Chip>) : <Chip>Sem preferências registradas</Chip>}</Chips><CardSub style={{marginTop: 14}}>{customer.relationshipNotes || 'Adicione notas de relacionamento para manter o contexto comercial.'}</CardSub>
-          <Divider /><CardTitle style={{fontSize: 16}}>Histórico de vendas</CardTitle><Timeline style={{marginTop: 16}}>{sales.length ? sales.map((sale) => <TimelineItem key={sale._id}><RowTitle>Venda #{sale.number || '—'} · {money(sale.totalCents)}</RowTitle><RowMeta>{dateBR(sale._createdAt)} · {sale.status || 'status não definido'}</RowMeta></TimelineItem>) : <TimelineItem><RowTitle>Nenhuma venda registrada</RowTitle><RowMeta>O histórico comercial aparecerá aqui.</RowMeta></TimelineItem>}</Timeline>
+          <Divider /><CardTitle style={{fontSize: 16}}>Histórico de vendas</CardTitle>{salesQuery.state.status === 'loading' ? <CardSub style={{marginTop: 12}}>Carregando histórico...</CardSub> : salesQuery.state.status === 'error' ? <CardSub style={{marginTop: 12}}>Histórico indisponível.</CardSub> : <Timeline style={{marginTop: 16}}>{sales.length ? sales.map((sale) => <TimelineItem key={sale._id}><RowTitle>Venda #{sale.number || '—'} · {money(sale.totalCents)}</RowTitle><RowMeta>{dateBR(sale._createdAt)} · {sale.status || 'status não definido'}</RowMeta></TimelineItem>) : <TimelineItem><RowTitle>Nenhuma venda registrada</RowTitle><RowMeta>O histórico comercial aparecerá aqui.</RowMeta></TimelineItem>}</Timeline>}
         </Card> : <Empty>Selecione um cliente.</Empty>}
 
         <DetailPanel><CardTitle style={{fontSize: 17}}>Próxima Ação</CardTitle><Divider /><div style={{display: 'flex', alignItems: 'center', gap: 12}}><IconTile><MaterialIcon>event</MaterialIcon></IconTile><div><InfoLabel>Relacionamento</InfoLabel><InfoValue>{customer ? 'Registrar próximo contato' : 'Selecione um cliente'}</InfoValue></div></div><CardSub style={{marginTop: 14}}>Use tarefas e leads para agendar o próximo contato e manter o histórico rastreável.</CardSub><div style={{marginTop: 18}}><PrimaryIntentAction type="task"><MaterialIcon>add_task</MaterialIcon>Criar tarefa</PrimaryIntentAction></div><Divider /><CardTitle style={{fontSize: 16}}>Atalhos Rápidos</CardTitle><Grid $cols={2} style={{gap: 8, marginTop: 12}}><SecondaryIntentAction type="sale"><MaterialIcon>attach_money</MaterialIcon>Venda</SecondaryIntentAction><SecondaryIntentAction type="task"><MaterialIcon>add_task</MaterialIcon>Tarefa</SecondaryIntentAction><SecondaryIntentAction type="lead"><MaterialIcon>person_add</MaterialIcon>Lead</SecondaryIntentAction>{customer ? <SecondaryIntentAction type="customer" id={customer._id}><MaterialIcon>sticky_note</MaterialIcon>Notas</SecondaryIntentAction> : null}</Grid></DetailPanel>

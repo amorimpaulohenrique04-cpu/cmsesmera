@@ -5,6 +5,7 @@ import {DiamondIcon} from '@sanity/icons/Diamond'
 import {businessSchemaTypes, siteSchemaTypes} from './schemaTypes'
 import {businessStructure} from './structure/businessStructure'
 import {SITE_SINGLETON_TYPES, siteStructure} from './structure/siteStructure'
+import {EsmeraActiveToolLayout} from './studio/EsmeraActiveToolLayout'
 import {EsmeraNavbar} from './studio/EsmeraNavbar'
 import {EsmeraStudioLayout} from './studio/EsmeraStudioLayout'
 import {esmeraTheme} from './studio/esmeraTheme'
@@ -22,6 +23,7 @@ export default defineConfig([
     theme: esmeraTheme,
     studio: {
       components: {
+        activeToolLayout: EsmeraActiveToolLayout,
         layout: EsmeraStudioLayout,
         navbar: EsmeraNavbar,
       },
@@ -55,6 +57,7 @@ export default defineConfig([
     theme: esmeraTheme,
     studio: {
       components: {
+        activeToolLayout: EsmeraActiveToolLayout,
         layout: EsmeraStudioLayout,
         navbar: EsmeraNavbar,
       },

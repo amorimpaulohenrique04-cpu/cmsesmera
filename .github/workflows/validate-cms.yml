@@ -3,7 +3,7 @@ name: Validate CMS
 on:
   push:
     branches:
-      - fix/cms-shell-stitch-fidelity
+      - main
   pull_request:
     branches:
       - main

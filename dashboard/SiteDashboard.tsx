@@ -1,5 +1,4 @@
 import {useEffect, useState} from 'react'
-import {Spinner} from '@sanity/ui'
 import {useClient} from 'sanity'
 import {
   DashboardPage,
@@ -22,6 +21,8 @@ import {
   RowMeta,
   Rows,
   RowTitle,
+  SkeletonBlock,
+  SkeletonGrid,
   StatusPill,
   TwoColumnGrid,
 } from './dashboardStyles'
@@ -34,44 +35,77 @@ type RecentProduct = {
   code?: string
   status?: string
   availability?: string
+  priceMode?: string
   _updatedAt?: string
 }
 
 type SiteDashboardData = {
-  activeProducts: number
-  archivedProducts: number
-  categories: number
+  pieces: number
+  available: number
+  inquiry: number
   drafts: number
-  publishedPages: number
+  missingAlt: number
+  missingGallery: number
+  missingCategory: number
+  missingAvailability: number
   recentProducts: RecentProduct[]
 }
 
 const query = `{
-  "activeProducts": count(*[_type == "product" && status == "active"]),
-  "archivedProducts": count(*[_type == "product" && status == "archive"]),
-  "categories": count(*[_type == "category" && status == "active"]),
-  "drafts": count(*[_id in path("drafts.**")]),
-  "publishedPages": count(*[
-    _id in ["homePage", "aboutPage", "contactPage", "collectionPage", "navigation", "siteSettings"]
+  "pieces": count(*[_type == "product" && status != "archive"]),
+  "available": count(*[
+    _type == "product" &&
+    status == "active" &&
+    availability in ["unique", "available", "limited"]
   ]),
+  "inquiry": count(*[_type == "product" && status == "active" && priceMode == "inquiry"]),
+  "drafts": count(*[_type == "product" && _id in path("drafts.**")]),
+  "missingAlt": count(*[
+    _type == "product" &&
+    status == "active" &&
+    count(gallery[!defined(alt) || alt == ""]) > 0
+  ]),
+  "missingGallery": count(*[_type == "product" && status == "active" && count(gallery) == 0]),
+  "missingCategory": count(*[_type == "product" && status == "active" && count(categories) == 0]),
+  "missingAvailability": count(*[_type == "product" && !defined(availability)]),
   "recentProducts": *[_type == "product"] | order(_updatedAt desc)[0...6]{
     _id,
     title,
     code,
     status,
     availability,
+    priceMode,
     _updatedAt
   }
 }`
 
 function formatUpdatedAt(value?: string) {
   if (!value) return 'Sem data'
-  return new Date(value).toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+
+  const updated = new Date(value)
+  const today = new Date()
+  const sameDay = updated.toDateString() === today.toDateString()
+
+  if (sameDay) {
+    return `Hoje, ${updated.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}`
+  }
+
+  return updated.toLocaleDateString('pt-BR', {day: '2-digit', month: 'short'})
+}
+
+function productState(product: RecentProduct) {
+  if (product.status === 'archive') return {label: 'Arquivado', tone: 'neutral' as const}
+  if (product.status !== 'active') return {label: 'Rascunho', tone: 'neutral' as const}
+  if (product.priceMode === 'inquiry') return {label: 'Sob consulta', tone: 'sand' as const}
+
+  const labels: Record<string, string> = {
+    unique: 'Peça única',
+    available: 'Disponível',
+    made_to_order: 'Sob encomenda',
+    limited: 'Edição limitada',
+  }
+
+  return {label: labels[product.availability || ''] || 'Ativo', tone: 'green' as const}
 }
 
 function Metric({
@@ -89,6 +123,18 @@ function Metric({
       <MetricValue>{value}</MetricValue>
       {detail ? <MetricDetail>{detail}</MetricDetail> : null}
     </MetricCard>
+  )
+}
+
+function PendingRow({label, count, detail}: {label: string; count: number; detail: string}) {
+  return (
+    <Row>
+      <RowCopy>
+        <RowTitle>{label}</RowTitle>
+        <RowMeta>{detail}</RowMeta>
+      </RowCopy>
+      <StatusPill $tone={count ? 'sand' : 'green'}>{count ? `${count} revisar` : 'OK'}</StatusPill>
+    </Row>
   )
 }
 
@@ -120,8 +166,8 @@ export function SiteDashboard() {
     return (
       <DashboardPage>
         <DashboardShell>
-          <Eyebrow>ESMÉRA / SANITY CMS</Eyebrow>
-          <PageTitle>Não foi possível carregar a visão editorial.</PageTitle>
+          <Eyebrow>VISÃO GERAL</Eyebrow>
+          <PageTitle>Não foi possível carregar o catálogo.</PageTitle>
           <PageSubtitle>{error}</PageSubtitle>
         </DashboardShell>
       </DashboardPage>
@@ -131,9 +177,21 @@ export function SiteDashboard() {
   if (!data) {
     return (
       <DashboardPage>
-        <LoadingWrap>
-          <Spinner muted />
-        </LoadingWrap>
+        <DashboardShell>
+          <LoadingWrap aria-label="Carregando visão geral">
+            <SkeletonBlock $height={74} />
+            <SkeletonGrid>
+              <SkeletonBlock />
+              <SkeletonBlock />
+              <SkeletonBlock />
+              <SkeletonBlock />
+            </SkeletonGrid>
+            <TwoColumnGrid>
+              <SkeletonBlock $height={340} />
+              <SkeletonBlock $height={340} />
+            </TwoColumnGrid>
+          </LoadingWrap>
+        </DashboardShell>
       </DashboardPage>
     )
   }
@@ -143,69 +201,71 @@ export function SiteDashboard() {
       <DashboardShell>
         <PageHeader>
           <div>
-            <Eyebrow>ESMÉRA / SANITY CMS</Eyebrow>
-            <PageTitle>Conteúdo claro. Catálogo confiável.</PageTitle>
-            <PageSubtitle>
-              O que precisa de atenção no site, sem expor nomes técnicos de schema.
-            </PageSubtitle>
+            <Eyebrow>HOJE</Eyebrow>
+            <PageTitle>Visão geral</PageTitle>
+            <PageSubtitle>Conteúdo, disponibilidade e publicação da Esméra.</PageSubtitle>
           </div>
         </PageHeader>
 
         <MetricsGrid>
-          <Metric
-            label="Produtos ativos"
-            value={data.activeProducts}
-            detail={`${data.archivedProducts} arquivados`}
-          />
-          <Metric
-            label="Categorias"
-            value={data.categories}
-            detail="ativas no catálogo"
-          />
-          <Metric
-            label="Rascunhos"
-            value={data.drafts}
-            detail="conteúdo ainda não publicado"
-          />
-          <Metric
-            label="Áreas publicadas"
-            value={`${data.publishedPages}/6`}
-            detail="Home, páginas, navegação e configurações"
-          />
+          <Metric label="Peças" value={data.pieces} detail="no catálogo ativo e em preparação" />
+          <Metric label="Disponíveis" value={data.available} detail="prontas para apresentação" />
+          <Metric label="Sob consulta" value={data.inquiry} detail="sem preço público" />
+          <Metric label="Rascunhos" value={data.drafts} detail="com alterações ainda não publicadas" />
         </MetricsGrid>
 
         <TwoColumnGrid>
           <Panel>
-            <PanelTitle>Produtos atualizados recentemente</PanelTitle>
+            <PanelTitle>Recentemente editadas</PanelTitle>
             {data.recentProducts.length ? (
               <Rows>
-                {data.recentProducts.map((product) => (
-                  <Row key={product._id}>
-                    <RowCopy>
-                      <RowTitle>{product.title || 'Produto sem título'}</RowTitle>
-                      <RowMeta>
-                        {[product.code, formatUpdatedAt(product._updatedAt)]
-                          .filter(Boolean)
-                          .join(' · ')}
-                      </RowMeta>
-                    </RowCopy>
-                    <StatusPill $tone={product.status === 'active' ? 'green' : 'neutral'}>
-                      {product.status === 'active' ? 'Ativo' : product.status || 'Rascunho'}
-                    </StatusPill>
-                  </Row>
-                ))}
+                {data.recentProducts.map((product) => {
+                  const state = productState(product)
+
+                  return (
+                    <Row key={product._id}>
+                      <RowCopy>
+                        <RowTitle>{product.title || 'Produto sem título'}</RowTitle>
+                        <RowMeta>
+                          {[product.code, formatUpdatedAt(product._updatedAt)]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </RowMeta>
+                      </RowCopy>
+                      <StatusPill $tone={state.tone}>{state.label}</StatusPill>
+                    </Row>
+                  )
+                })}
               </Rows>
             ) : (
-              <EmptyState>Nenhum produto cadastrado ainda.</EmptyState>
+              <EmptyState>Nenhuma peça cadastrada ainda.</EmptyState>
             )}
           </Panel>
 
           <Panel>
-            <PanelTitle>Regra de ouro</PanelTitle>
-            <PageSubtitle>
-              Produto é entidade única. Home, Signature e Matter devem selecionar referências
-              existentes — nunca reescrever título, preço, código ou disponibilidade.
-            </PageSubtitle>
+            <PanelTitle>Pendências editoriais</PanelTitle>
+            <Rows>
+              <PendingRow
+                label="Texto alternativo"
+                count={data.missingAlt}
+                detail="Imagens publicadas precisam de descrição acessível."
+              />
+              <PendingRow
+                label="Galeria"
+                count={data.missingGallery}
+                detail="Peças ativas precisam ter mídia cadastrada."
+              />
+              <PendingRow
+                label="Categoria"
+                count={data.missingCategory}
+                detail="A classificação mantém busca e navegação coerentes."
+              />
+              <PendingRow
+                label="Disponibilidade"
+                count={data.missingAvailability}
+                detail="O estado comercial deve estar explícito antes da publicação."
+              />
+            </Rows>
           </Panel>
         </TwoColumnGrid>
       </DashboardShell>

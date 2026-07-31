@@ -72,6 +72,14 @@ const ProductRow = styled.button<{$selected?: boolean}>`
   }
 `
 
+const CatalogLayout = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, .7fr);
+  gap: 24px;
+  align-items: start;
+  @media (max-width: 980px) { grid-template-columns: 1fr; }
+`
+
 const FilterButton = styled.button<{$active?: boolean}>`
   display: inline-flex;
   min-height: 38px;
@@ -127,8 +135,8 @@ const PRODUCTS_QUERY = `*[_type == "product"] | order(_updatedAt desc){
   priceMode,
   basePriceCents,
   "category": categories[0]->title,
-  "image": coalesce(gallery[usage == "cover"][0].asset->url, gallery[0].asset->url),
-  "alt": coalesce(gallery[usage == "cover"][0].alt, gallery[0].alt, title),
+  "image": coalesce(gallery[role == "cover"][0].asset->url, gallery[0].asset->url),
+  "alt": coalesce(gallery[role == "cover"][0].alt, gallery[0].alt, title),
   "updated": _updatedAt,
   "draft": _id in path("drafts.**")
 }`
@@ -217,7 +225,7 @@ export function SiteProductsPage() {
           <Chip>Arquivados <strong>{counts.archive}</strong></Chip>
         </Chips>
 
-        <div style={{display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(360px,.7fr)', gap: 24, alignItems: 'start'}}>
+        <CatalogLayout>
           <div>
             <ProductTable role="listbox" aria-label="Produtos">
               {filtered.map((item) => {
@@ -269,7 +277,7 @@ export function SiteProductsPage() {
               <SecondaryIntentAction type="product" id={selectedId}><MaterialIcon>settings</MaterialIcon>Editar campos avançados</SecondaryIntentAction>
             </DetailPanel>
           ) : <Empty>Selecione um produto.</Empty>}
-        </div>
+        </CatalogLayout>
       </Shell>
     </Page>
   )

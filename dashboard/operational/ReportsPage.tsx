@@ -2,8 +2,8 @@ import {useMemo, useState} from 'react'
 import {useClient} from 'sanity'
 import styled from 'styled-components'
 import {esmeraTokens as t} from '../../studio/esmeraTokens'
-import {Card, CardHeader, CardSub, CardTitle, Chip, Chips, Grid, Header, HeaderActions, IconTile, MaterialIcon, Page, Pill, RowMeta, RowTitle, Shell, StatCard, StatGrid, StatLabel, StatTop, StatValue, Subtitle, Title, money} from '../stitch/StitchUI'
-import {API_VERSION, ErrorState, KpiMeta, LoadingState, NativeButton, PrimaryNativeButton, formatUpdatedAt, useQueryState} from './shared'
+import {Card, CardHeader, CardSub, CardTitle, Grid, Header, HeaderActions, IconTile, MaterialIcon, Page, Pill, RowMeta, RowTitle, Shell, StatCard, StatGrid, StatLabel, StatTop, StatValue, Subtitle, Title, money} from '../stitch/StitchUI'
+import {API_VERSION, ErrorState, KpiMeta, LoadingState, NativeButton, PrimaryNativeButton, formatUpdatedAt, getStudioEnv, useQueryState} from './shared'
 
 const ReportGrid=styled.div`display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;@media(max-width:900px){grid-template-columns:1fr}`
 const HorizontalBars=styled.div`display:grid;gap:13px;`
@@ -37,7 +37,8 @@ function shareReport() {
 
 export function ReportsPage(){
  const client=useClient({apiVersion:API_VERSION})
- const siteClient=useMemo(()=>client.withConfig({dataset:'production'}),[client])
+ const siteDataset=getStudioEnv('SANITY_STUDIO_SITE_DATASET')||'production'
+ const siteClient=useMemo(()=>client.withConfig({dataset:siteDataset}),[client,siteDataset])
  const[draftDays,setDraftDays]=useState(30)
  const[draftChannel,setDraftChannel]=useState('all')
  const[days,setDays]=useState(30)
@@ -51,6 +52,7 @@ export function ReportsPage(){
  if(site.state.status==='error')return <Page><Shell><Header><div><Title>Relatórios</Title><Subtitle>Indicadores comerciais e desempenho do negócio.</Subtitle></div></Header><ErrorState code={site.state.code} detail={site.state.message} onRetry={site.retry}/></Shell></Page>
 
  const data=report.state.data
+ const siteData=site.state.data
  const sales=channel==='all'?data.sales:data.sales.filter((sale)=>sale.channel===channel)
  const leads=data.leads
  const won=leads.filter((lead)=>lead.stage==='won').length
@@ -62,17 +64,21 @@ export function ReportsPage(){
  const total=paid.reduce((sum,sale)=>sum+(sale.totalCents||0),0)
  const leadTimes=sales.map((sale)=>sale.leadCreatedAt&&sale.createdAt?(new Date(sale.createdAt).getTime()-new Date(sale.leadCreatedAt).getTime())/86400000:null).filter((value):value is number=>typeof value==='number'&&value>=0)
  const avgDays=leadTimes.length?leadTimes.reduce((a,b)=>a+b,0)/leadTimes.length:null
- const sources=useMemo(()=>{const map=new Map<string,number>();sales.forEach((sale)=>map.set(sale.channel||'outro',(map.get(sale.channel||'outro')||0)+1));return [...map.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5)},[sales])
+ const sourceMap=new Map<string,number>();sales.forEach((sale)=>sourceMap.set(sale.channel||'outro',(sourceMap.get(sale.channel||'outro')||0)+1))
+ const sources=[...sourceMap.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5)
  const maxSource=Math.max(1,...sources.map(([,value])=>value))
  const losses=leads.filter((lead)=>lead.stage==='lost')
- const lossMap=useMemo(()=>{const map=new Map<string,number>();losses.forEach((lead)=>map.set(lead.lossReason||'Sem motivo registrado',(map.get(lead.lossReason||'Sem motivo registrado')||0)+1));return [...map.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5)},[losses])
- const productMap=useMemo(()=>{const map=new Map<string,number>();sales.forEach((sale)=>sale.items?.forEach((item)=>map.set(item.snapshotTitle||'Produto',(map.get(item.snapshotTitle||'Produto')||0)+(item.quantity||1))));return [...map.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5)},[sales])
+ const lossesByReason=new Map<string,number>();losses.forEach((lead)=>lossesByReason.set(lead.lossReason||'Sem motivo registrado',(lossesByReason.get(lead.lossReason||'Sem motivo registrado')||0)+1))
+ const lossMap=[...lossesByReason.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5)
+ const products=new Map<string,number>();sales.forEach((sale)=>sale.items?.forEach((item)=>products.set(item.snapshotTitle||'Produto',(products.get(item.snapshotTitle||'Produto')||0)+(item.quantity||1))))
+ const productMap=[...products.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5)
  const stages=[['Leads',leads.length],['Curadoria',leads.filter((lead)=>['curation','proposal','negotiation','won'].includes(lead.stage||'')).length],['Proposta',leads.filter((lead)=>['proposal','negotiation','won'].includes(lead.stage||'')).length],['Negociação',leads.filter((lead)=>['negotiation','won'].includes(lead.stage||'')).length],['Ganho',won]] as const
  const maxStage=Math.max(1,...stages.map(([,value])=>value))
  const pendingCustomers=new Set(data.afterSales.filter((item)=>item.pending>0).map((item)=>item.customerId).filter(Boolean))
  const withoutFollowup=data.customers.filter((customer)=>!pendingCustomers.has(customer._id)).length
- const ownerMap=useMemo(()=>{const map=new Map<string,{leads:number;sales:number;value:number}>();leads.forEach((lead)=>{const key=lead.owner||'Sem responsável';const row=map.get(key)||{leads:0,sales:0,value:0};row.leads+=1;map.set(key,row)});sales.forEach((sale)=>{const key=sale.owner||'Sem responsável';const row=map.get(key)||{leads:0,sales:0,value:0};row.sales+=1;row.value+=sale.totalCents||0;map.set(key,row)});return [...map.entries()].sort((a,b)=>b[1].value-a[1].value).slice(0,5)},[leads,sales])
- const channels=[...new Set(data.sales.map((sale)=>sale.channel).filter(Boolean))] as string[]
+ const owners=new Map<string,{leads:number;sales:number;value:number}>();leads.forEach((lead)=>{const key=lead.owner||'Sem responsável';const row=owners.get(key)||{leads:0,sales:0,value:0};row.leads+=1;owners.set(key,row)});sales.forEach((sale)=>{const key=sale.owner||'Sem responsável';const row=owners.get(key)||{leads:0,sales:0,value:0};row.sales+=1;row.value+=sale.totalCents||0;owners.set(key,row)})
+ const ownerMap=[...owners.entries()].sort((a,b)=>b[1].value-a[1].value).slice(0,5)
+ const channels=[...new Set(data.sales.map((sale)=>sale.channel).filter((value):value is string=>Boolean(value)))]
  const updated=formatUpdatedAt(report.state.updatedAt)
 
  return <Page><Shell>
@@ -90,7 +96,7 @@ export function ReportsPage(){
    <Card><CardHeader><div><CardTitle>Produtos mais solicitados</CardTitle><CardSub>Quantidade registrada nos itens de venda.</CardSub></div></CardHeader>{productMap.length?productMap.map(([title,count],index)=><div key={title} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,padding:'10px 0',borderBottom:`1px solid ${t.color.line}`}}><div><RowTitle>{String(index+1).padStart(2,'0')} · {title}</RowTitle><RowMeta>Itens vendidos no período</RowMeta></div><Pill $tone="green">{count}</Pill></div>):<CardSub>Sem itens no período.</CardSub>}</Card>
    <Card><CardHeader><div><CardTitle>Categorias com maior conversão</CardTitle><CardSub>Depende de snapshot de categoria na venda.</CardSub></div><Pill>Não configurado</Pill></CardHeader><CardSub>O schema atual preserva título/seleção do produto, mas não a categoria histórica. Exibir uma taxa agora seria inferência não verificável.</CardSub></Card>
    <Card><CardHeader><div><CardTitle>Motivos de Perda</CardTitle><CardSub>Leads encerrados como perdidos.</CardSub></div></CardHeader><HorizontalBars>{lossMap.length?lossMap.map(([label,value])=><HBarRow key={label}><span>{label}</span><HTrack><HFill $w={Math.round(value/Math.max(1,losses.length)*100)}/></HTrack><strong>{value}</strong></HBarRow>):<CardSub>Nenhuma perda registrada.</CardSub>}</HorizontalBars></Card>
-   <Card><CardHeader><div><CardTitle>Performance de Estoque</CardTitle><CardSub>Leitura operacional do catálogo production.</CardSub></div></CardHeader><Grid $cols={2}><div><StatLabel>Produtos ativos</StatLabel><StatValue style={{fontSize:24}}>{site.state.data.activeProducts}</StatValue></div><div><StatLabel>Sob consulta</StatLabel><StatValue style={{fontSize:24}}>{site.state.data.inquiryProducts}</StatValue></div></Grid></Card>
+   <Card><CardHeader><div><CardTitle>Performance de Estoque</CardTitle><CardSub>Leitura operacional do catálogo {siteDataset}.</CardSub></div></CardHeader><Grid $cols={2}><div><StatLabel>Produtos ativos</StatLabel><StatValue style={{fontSize:24}}>{siteData.activeProducts}</StatValue></div><div><StatLabel>Sob consulta</StatLabel><StatValue style={{fontSize:24}}>{siteData.inquiryProducts}</StatValue></div></Grid></Card>
    <Card><CardHeader><div><CardTitle>Clientes sem follow-up</CardTitle><CardSub>Clientes sem caso com follow-up pendente.</CardSub></div><Pill $tone={withoutFollowup?'red':'green'}>{withoutFollowup}</Pill></CardHeader><CardSub>{withoutFollowup?`${withoutFollowup} cliente(s) sem follow-up pendente registrado.`:'Todos os clientes possuem acompanhamento pendente ou não há clientes cadastrados.'}</CardSub></Card>
    <Card><CardHeader><div><CardTitle>Desempenho por Responsável</CardTitle><CardSub>Leads, vendas e valor registrados no período.</CardSub></div></CardHeader>{ownerMap.length?ownerMap.map(([owner,row])=><div key={owner} style={{display:'grid',gridTemplateColumns:'1fr auto auto',gap:12,alignItems:'center',padding:'10px 0',borderBottom:`1px solid ${t.color.line}`}}><RowTitle>{owner}</RowTitle><RowMeta>{row.leads} leads · {row.sales} vendas</RowMeta><strong>{money(row.value)}</strong></div>):<CardSub>Sem responsáveis registrados.</CardSub>}</Card>
   </ReportGrid>

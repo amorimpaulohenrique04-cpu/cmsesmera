@@ -32,7 +32,6 @@ export const esmeraTokens = {
     textSecondary: '#414845',
     inverse: '#263143',
     inverseText: '#ecf1ff',
-    // compatibility aliases used by existing views
     canvas: '#f9f9ff',
     ivory: '#f9f9ff',
     sand: '#f0f3ff',
@@ -42,8 +41,8 @@ export const esmeraTokens = {
     orangeSoft: '#f5eddc',
   },
   typography: {
-    family: "'Hanken Grotesk', sans-serif",
-    headline: "'Manrope', sans-serif",
+    family: "Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    headline: "Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     page: {size: 32, lineHeight: 40, weight: 600},
     display: {size: 48, lineHeight: 56, weight: 700},
     section: {size: 24, lineHeight: 32, weight: 600},
@@ -56,6 +55,7 @@ export const esmeraTokens = {
   },
   layout: {
     sidebar: 260,
+    sidebarTablet: 84,
     header: 80,
     contentMax: 1400,
     pagePaddingDesktop: 40,
@@ -65,12 +65,12 @@ export const esmeraTokens = {
     gridGapCompact: 16,
   },
   radius: {
-    section: 12,
-    card: 12,
+    section: 16,
+    card: 16,
     navItem: 12,
     control: 8,
     input: 8,
-    overlay: 12,
+    overlay: 16,
     status: 999,
   },
   shadow: {

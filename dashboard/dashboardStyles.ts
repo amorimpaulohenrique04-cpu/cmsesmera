@@ -360,7 +360,7 @@ export const BarFill = styled.div`
 `
 
 const skeletonPulse = keyframes`
-  0%, 100% { opacity: .56; }
+  0%, 100% { opacity: .58; }
   50% { opacity: 1; }
 `
 
@@ -390,8 +390,7 @@ export const SkeletonBlock = styled.div<{$height?: number}>`
   min-height: ${({$height}) => $height || 120}px;
   border: 1px solid ${palette.line};
   border-radius: ${t.radius.control}px;
-  background: linear-gradient(90deg, ${palette.surface}, ${palette.sand}, ${palette.surface});
-  background-size: 240% 100%;
+  background: ${palette.sand};
   animation: ${skeletonPulse} 1.2s ${t.motion.easing} infinite;
 
   @media (prefers-reduced-motion: reduce) {

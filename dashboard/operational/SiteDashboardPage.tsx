@@ -33,6 +33,7 @@ import {
   KpiMeta,
   LoadingState,
   formatUpdatedAt,
+  getStudioEnv,
   useQueryState,
 } from './shared'
 
@@ -131,12 +132,12 @@ type BusinessData = {
 }
 
 const SITE_QUERY = `{
-  "products": count(*[_type == "product" && status == "active"]),
-  "recent": *[_type == "product"] | order(_updatedAt desc)[0...1]{
+  "products": count(*[_type == "product" && status == "active" && !(_id in path("drafts.**"))]),
+  "recent": *[_type == "product" && !(_id in path("drafts.**"))] | order(_updatedAt desc)[0...1]{
     _id,
     title,
-    "image": coalesce(gallery[usage == "cover"][0].asset->url, gallery[0].asset->url),
-    "alt": coalesce(gallery[usage == "cover"][0].alt, gallery[0].alt, title)
+    "image": coalesce(gallery[role == "cover"][0].asset->url, gallery[0].asset->url),
+    "alt": coalesce(gallery[role == "cover"][0].alt, gallery[0].alt, title)
   }
 }`
 
@@ -171,7 +172,11 @@ const BUSINESS_QUERY = `{
 
 export function SiteDashboardPage() {
   const client = useClient({apiVersion: API_VERSION})
-  const businessClient = useMemo(() => client.withConfig({dataset: 'business'}), [client])
+  const businessDataset = getStudioEnv('SANITY_STUDIO_BUSINESS_DATASET') || 'business'
+  const businessClient = useMemo(
+    () => client.withConfig({dataset: businessDataset}),
+    [businessDataset, client],
+  )
   const from = useMemo(() => {
     const date = new Date()
     date.setDate(date.getDate() - 30)
@@ -208,8 +213,12 @@ export function SiteDashboardPage() {
 
   const siteData = site.state.data
   const businessUnavailable = business.state.status === 'error'
-  const businessData = businessUnavailable ? null : business.state.data
-  const updatedAt = businessData ? business.state.updatedAt : site.state.updatedAt
+  const businessData = business.state.status === 'ready' || business.state.status === 'empty'
+    ? business.state.data
+    : null
+  const updatedAt = business.state.status === 'ready' || business.state.status === 'empty'
+    ? business.state.updatedAt
+    : site.state.updatedAt
   const salesValue = businessData?.salesValues?.reduce((sum, value) => sum + (value || 0), 0) || 0
   const pipeline = businessData?.pipeline || {new: 0, curation: 0, proposal: 0, negotiation: 0, won: 0}
   const maxPipeline = Math.max(1, ...Object.values(pipeline))
@@ -228,11 +237,11 @@ export function SiteDashboardPage() {
         <StatGrid>
           <StatCard>
             <StatTop><IconTile><MaterialIcon>inventory_2</MaterialIcon></IconTile><Pill $tone="green">Catálogo</Pill></StatTop>
-            <div><StatLabel>Produtos Ativos</StatLabel><StatValue>{siteData.products}</StatValue><KpiMeta>Fonte: production · status active · {formatUpdatedAt(site.state.updatedAt)}</KpiMeta></div>
+            <div><StatLabel>Produtos Ativos</StatLabel><StatValue>{siteData.products}</StatValue><KpiMeta>Fonte: production · publicados com status active · {formatUpdatedAt(site.state.updatedAt)}</KpiMeta></div>
           </StatCard>
           <StatCard>
             <StatTop><IconTile $tone="blue"><MaterialIcon>group</MaterialIcon></IconTile><Pill $tone="blue">Pipeline</Pill></StatTop>
-            <div><StatLabel>Leads Abertos</StatLabel><StatValue>{businessData ? businessData.leads : '—'}</StatValue><KpiMeta>{businessData ? `Fonte: business · exclui ganho/perdido · ${formatUpdatedAt(updatedAt)}` : 'Fonte Business indisponível'}</KpiMeta></div>
+            <div><StatLabel>Leads Abertos</StatLabel><StatValue>{businessData ? businessData.leads : '—'}</StatValue><KpiMeta>{businessData ? `Fonte: ${businessDataset} · exclui ganho/perdido · ${formatUpdatedAt(updatedAt)}` : 'Fonte Business indisponível'}</KpiMeta></div>
           </StatCard>
           <StatCard>
             <StatTop><IconTile $tone="sand"><MaterialIcon>payments</MaterialIcon></IconTile><Pill $tone="sand">30 dias</Pill></StatTop>

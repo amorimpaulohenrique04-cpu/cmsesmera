@@ -1,3 +1,4 @@
+import type {ReactNode} from 'react'
 import {route, useRouter} from 'sanity/router'
 import {
   AfterSalesPage,
@@ -53,7 +54,7 @@ export function BusinessCmsTool() {
   const {state} = useRouter()
   const {view} = state as CmsRouteState
 
-  let page
+  let page: ReactNode
   switch (view || 'customers') {
     case 'customers': page = <CustomersPage />; break
     case 'sales': page = <SalesPage />; break

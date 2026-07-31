@@ -229,11 +229,11 @@ function RecentProductRow({product}: {product: RecentProduct}) {
 export function SiteDashboard() {
   const client = useClient({apiVersion: API_VERSION})
   const workspace = useWorkspace()
-  const createProductLink = useIntentLink({intent: 'create', params: {type: 'product'}})
   const [data, setData] = useState<SiteDashboardData | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const workspaceBase = workspace.basePath === '/' ? '' : workspace.basePath.replace(/\/$/, '')
+  const basePath = workspace.basePath || ''
+  const workspaceBase = basePath === '/' ? '' : basePath.replace(/\/$/, '')
   const productsHref = `${workspaceBase}/cms/product`
 
   useEffect(() => {
@@ -355,7 +355,7 @@ export function SiteDashboard() {
                 ))}
               </RecentRows>
             ) : (
-              <EmptyRecentState href={createProductLink.href} onClick={createProductLink.onClick} />
+              <EmptyRecentState />
             )}
           </Panel>
 

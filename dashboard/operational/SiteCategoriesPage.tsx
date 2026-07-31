@@ -2,7 +2,7 @@ import {useState} from 'react'
 import {useClient} from 'sanity'
 import styled from 'styled-components'
 import {esmeraTokens as t} from '../../studio/esmeraTokens'
-import {Card, CardSub, CardTitle, Chip, Chips, DetailPanel, Divider, Empty, Header, InfoGrid, InfoLabel, InfoValue, MaterialIcon, Page, Pill, RowMeta, RowTitle, SearchBox, SearchInput, Shell, Split, Subtitle, Thumb, Title, Toolbar} from '../stitch/StitchUI'
+import {CardSub, CardTitle, Chip, Chips, DetailPanel, Divider, Empty, Header, InfoGrid, InfoLabel, InfoValue, MaterialIcon, Page, Pill, RowMeta, RowTitle, SearchBox, SearchInput, Shell, Split, Subtitle, Thumb, Title, Toolbar} from '../stitch/StitchUI'
 import {API_VERSION, ErrorState, LoadingState, PrimaryIntentAction, SecondaryIntentAction, useQueryState} from './shared'
 
 const CategoryButton = styled.button<{$selected?: boolean}>`

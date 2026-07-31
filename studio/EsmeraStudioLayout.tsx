@@ -1,4 +1,5 @@
 import {type LayoutProps} from 'sanity'
+import {useRouter} from 'sanity/router'
 import styled, {createGlobalStyle} from 'styled-components'
 import {CmsShellProvider} from './CmsShellContext'
 import {esmeraTokens as t} from './esmeraTokens'
@@ -33,16 +34,16 @@ const Global = createGlobalStyle`
   }
 `
 
-const Content = styled.div`
+const Content = styled.div<{$withSidebar: boolean}>`
   min-width: 0;
   min-height: 100vh;
-  margin-left: ${t.layout.sidebar}px;
+  margin-left: ${({$withSidebar}) => ($withSidebar ? `${t.layout.sidebar}px` : '0')};
   background: ${t.color.surface};
   color: ${t.color.ink};
   font-family: ${t.typography.family};
 
   @media (max-width: 1023px) {
-    margin-left: ${t.layout.sidebarTablet}px;
+    margin-left: ${({$withSidebar}) => ($withSidebar ? `${t.layout.sidebarTablet}px` : '0')};
   }
 
   @media (max-width: 720px) {
@@ -51,11 +52,15 @@ const Content = styled.div`
 `
 
 export function EsmeraStudioLayout(props: LayoutProps) {
+  useRouter()
+  const pathname = typeof window === 'undefined' ? '' : window.location.pathname
+  const isCmsTool = /\/(site|business)\/cms(?:\/|$)/.test(pathname)
+
   return (
     <CmsShellProvider>
       <Global />
-      <StitchSidebar />
-      <Content>{props.renderDefault(props)}</Content>
+      {isCmsTool ? <StitchSidebar /> : null}
+      <Content $withSidebar={isCmsTool}>{props.renderDefault(props)}</Content>
     </CmsShellProvider>
   )
 }

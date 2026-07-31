@@ -142,6 +142,7 @@ const Toast = styled.div<{$error?: boolean}>`
   font-weight: 600;
 `
 
+type ProductMedia = {mediaKey?: string; role?: string; alt?: string; url?: string}
 type ProductDoc = {
   _id: string
   title?: string
@@ -155,7 +156,7 @@ type ProductDoc = {
   basePriceCents?: number
   categoryRefs?: string[]
   categories?: {title?: string}[]
-  gallery?: {mediaKey?: string; role?: string; alt?: string; url?: string}[]
+  gallery?: ProductMedia[]
   variantsCount?: number
   optionsCount?: number
   searchTerms?: string[]
@@ -213,8 +214,9 @@ export function SiteProductEditorPage({id}: {id: string}) {
   const [saving, setSaving] = useState(false)
   const [feedback, setFeedback] = useState<{text: string; error?: boolean} | null>(null)
 
-  const loaded = product.state.status === 'ready' || product.state.status === 'empty'
-  const doc = loaded ? product.state.data : null
+  const doc = product.state.status === 'ready' || product.state.status === 'empty'
+    ? product.state.data
+    : null
 
   useEffect(() => {
     if (!doc) return
@@ -247,9 +249,9 @@ export function SiteProductEditorPage({id}: {id: string}) {
         await client.createIfNotExists({...base, _id: draftId, _type: 'product'})
       }
 
-      const currentRefs = doc?.categoryRefs || []
+      const currentRefs: string[] = doc?.categoryRefs || []
       const refs = primaryCategory
-        ? [primaryCategory, ...currentRefs.filter((ref) => ref !== primaryCategory)].map((ref, index) => ({_type: 'reference', _ref: ref, _key: `category-${index}-${ref.slice(-6)}`}))
+        ? [primaryCategory, ...currentRefs.filter((ref: string) => ref !== primaryCategory)].map((ref: string, index: number) => ({_type: 'reference', _ref: ref, _key: `category-${index}-${ref.slice(-6)}`}))
         : []
       const cents = priceMode === 'fixed' && basePrice ? Math.round(Number(basePrice.replace(',', '.')) * 100) : undefined
       const patch: Record<string, unknown> = {
@@ -281,6 +283,9 @@ export function SiteProductEditorPage({id}: {id: string}) {
   }
   if (product.state.status === 'error') {
     return <Page><Shell><Header><div><Title>Produto</Title><Subtitle>Ficha editorial.</Subtitle></div></Header><ErrorState code={product.state.code} detail={product.state.message} onRetry={product.retry} /></Shell></Page>
+  }
+  if (categories.state.status === 'error') {
+    return <Page><Shell><Header><div><Title>Produto</Title><Subtitle>Ficha editorial.</Subtitle></div></Header><ErrorState code={categories.state.code} detail={categories.state.message} onRetry={categories.retry} /></Shell></Page>
   }
   if (!doc) {
     return <Page><Shell><Header><div><Title>Produto não encontrado</Title><Subtitle>O documento solicitado não existe neste dataset.</Subtitle></div></Header><Card><a href="/site/cms/products">Voltar aos produtos</a></Card></Shell></Page>
@@ -333,7 +338,7 @@ export function SiteProductEditorPage({id}: {id: string}) {
 
             <Card id="media">
               <CardHeader><div><CardTitle><MaterialIcon>photo_camera</MaterialIcon> Galeria de Mídia</CardTitle><CardSub>A imagem com papel “Capa” é usada como principal no portal.</CardSub></div><SecondaryIntentAction type="product" id={publishedId}><MaterialIcon>add</MaterialIcon>Gerenciar mídia</SecondaryIntentAction></CardHeader>
-              {doc.gallery?.length ? <MediaGrid>{doc.gallery.map((media, index) => <Media key={media.mediaKey || `${index}`}>
+              {doc.gallery?.length ? <MediaGrid>{doc.gallery.map((media: ProductMedia, index: number) => <Media key={media.mediaKey || `${index}`}>
                 {media.url ? <img src={media.url} alt={media.alt || doc.title || 'Mídia do produto'} /> : <Thumb style={{width: '100%', height: 120}}><MaterialIcon>image</MaterialIcon></Thumb>}
                 <div style={{padding: 10}}><Pill $tone={media.role === 'cover' ? 'green' : 'neutral'}>{media.role === 'cover' ? 'Capa' : media.role || 'Galeria'}</Pill><CardSub>{media.alt || 'Sem texto alternativo'}</CardSub></div>
               </Media>)}</MediaGrid> : <CardSub>Nenhuma mídia cadastrada. Use “Gerenciar mídia” para adicionar imagens e texto alternativo.</CardSub>}

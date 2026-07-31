@@ -1,4 +1,4 @@
-import {useMemo, useState} from 'react'
+import {useState} from 'react'
 import {useClient} from 'sanity'
 import styled from 'styled-components'
 import {esmeraTokens as t} from '../../studio/esmeraTokens'
@@ -54,7 +54,7 @@ export function SalesPage() {
   if (query.state.status === 'error') return <Page><Shell><Header><div><Title>Vendas</Title><Subtitle>Negociações, pedidos e acompanhamento comercial.</Subtitle></div></Header><ErrorState code={query.state.code} detail={query.state.message} onRetry={query.retry} /></Shell></Page>
 
   const sales = query.state.data
-  const filtered = useMemo(() => sales.filter((sale) => `${sale.number || ''} ${sale.customer?.name || ''} ${sale.items?.[0]?.snapshotTitle || ''}`.toLowerCase().includes(q.toLowerCase())), [sales, q])
+  const filtered = sales.filter((sale) => `${sale.number || ''} ${sale.customer?.name || ''} ${sale.items?.[0]?.snapshotTitle || ''}`.toLowerCase().includes(q.toLowerCase()))
   const sale = sales.find((item) => item._id === selected) || filtered[0]
   const open = sales.filter((item) => !['delivered', 'cancelled'].includes(item.status || '')).length
   const proposals = sales.filter((item) => item.status === 'proposal').length

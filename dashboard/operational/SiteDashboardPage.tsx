@@ -212,7 +212,7 @@ export function SiteDashboardPage() {
   }
 
   const siteData = site.state.data
-  const businessUnavailable = business.state.status === 'error'
+  const businessError = business.state.status === 'error' ? business.state : null
   const businessData = business.state.status === 'ready' || business.state.status === 'empty'
     ? business.state.data
     : null
@@ -253,7 +253,7 @@ export function SiteDashboardPage() {
           </StatCard>
         </StatGrid>
 
-        {businessUnavailable ? <div style={{marginBottom: 24}}><ErrorState code={business.state.code} detail={business.state.message} onRetry={business.retry} /></div> : null}
+        {businessError ? <div style={{marginBottom: 24}}><ErrorState code={businessError.code} detail={businessError.message} onRetry={business.retry} /></div> : null}
 
         <DashboardMain>
           <PipelineCard>

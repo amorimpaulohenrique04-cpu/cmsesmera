@@ -1,4 +1,4 @@
-import {useMemo, useState} from 'react'
+import {useState} from 'react'
 import {useClient} from 'sanity'
 import styled from 'styled-components'
 import {esmeraTokens as t} from '../../studio/esmeraTokens'
@@ -29,13 +29,13 @@ export function SiteCategoriesPage() {
   const client = useClient({apiVersion: API_VERSION})
   const query = useQueryState<Category[]>(client, QUERY, {}, (items) => items.length === 0)
   const [selected, setSelected] = useState('')
-  const [q, setQ] = useState('')
+  const [q, setQ] = useState(() => new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search).get('search') || '')
 
   if (query.state.status === 'loading') return <Page><Shell><Header><div><Title>Categorias</Title><Subtitle>Organize o catálogo e a navegação do site.</Subtitle></div></Header><LoadingState /></Shell></Page>
   if (query.state.status === 'error') return <Page><Shell><Header><div><Title>Categorias</Title><Subtitle>Organize o catálogo e a navegação do site.</Subtitle></div></Header><ErrorState code={query.state.code} detail={query.state.message} onRetry={query.retry} /></Shell></Page>
 
   const categories = query.state.data
-  const filtered = useMemo(() => categories.filter((item) => (item.title || '').toLowerCase().includes(q.toLowerCase())), [categories, q])
+  const filtered = categories.filter((item) => (item.title || '').toLowerCase().includes(q.toLowerCase()))
   const category = categories.find((item) => item._id === selected) || filtered[0]
 
   return (

@@ -11,7 +11,10 @@ import {EsmeraStudioLayout} from './studio/EsmeraStudioLayout'
 import {BusinessCmsTool, cmsToolRouter, SiteCmsTool} from './studio/cms/CmsTool'
 import {esmeraTheme} from './studio/esmeraTheme'
 
-const projectId = 'u60dwmhb'
+const env = (import.meta as ImportMeta & {env?: Record<string, string | undefined>}).env || {}
+const projectId = env.SANITY_STUDIO_PROJECT_ID || 'u60dwmhb'
+const siteDataset = env.SANITY_STUDIO_SITE_DATASET || 'production'
+const businessDataset = env.SANITY_STUDIO_BUSINESS_DATASET || 'business'
 
 export default defineConfig([
   {
@@ -20,7 +23,7 @@ export default defineConfig([
     icon: DiamondIcon,
     basePath: '/site',
     projectId,
-    dataset: 'production',
+    dataset: siteDataset,
     theme: esmeraTheme,
     studio: {
       components: {
@@ -32,7 +35,7 @@ export default defineConfig([
     tools: [
       {
         name: 'cms',
-        title: 'CMS',
+        title: 'Portal operacional',
         icon: DiamondIcon,
         component: SiteCmsTool,
         router: cmsToolRouter,
@@ -41,7 +44,7 @@ export default defineConfig([
     plugins: [
       structureTool({
         name: 'documents',
-        title: 'Documentos',
+        title: 'Admin técnico',
         structure: siteStructure,
       }),
     ],
@@ -63,7 +66,7 @@ export default defineConfig([
     icon: CaseIcon,
     basePath: '/business',
     projectId,
-    dataset: 'business',
+    dataset: businessDataset,
     theme: esmeraTheme,
     studio: {
       components: {
@@ -75,7 +78,7 @@ export default defineConfig([
     tools: [
       {
         name: 'cms',
-        title: 'CMS',
+        title: 'Portal operacional',
         icon: CaseIcon,
         component: BusinessCmsTool,
         router: cmsToolRouter,
@@ -84,7 +87,7 @@ export default defineConfig([
     plugins: [
       structureTool({
         name: 'documents',
-        title: 'Documentos',
+        title: 'Admin técnico',
         structure: businessStructure,
       }),
     ],

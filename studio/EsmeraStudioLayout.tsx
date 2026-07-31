@@ -7,12 +7,16 @@ const EsmeraGlobalStyle = createGlobalStyle`
     color-scheme: light;
     --esmera-ink: ${t.color.ink};
     --esmera-graphite: ${t.color.graphite};
+    --esmera-canvas: ${t.color.canvas};
     --esmera-ivory: ${t.color.ivory};
     --esmera-surface: ${t.color.surface};
     --esmera-sand: ${t.color.sand};
     --esmera-line: ${t.color.line};
     --esmera-line-strong: ${t.color.lineStrong};
     --esmera-emerald: ${t.color.emerald};
+    --esmera-emerald-soft: ${t.color.emeraldSoft};
+    --esmera-orange: ${t.color.orange};
+    --esmera-orange-soft: ${t.color.orangeSoft};
     --esmera-text-secondary: ${t.color.textSecondary};
   }
 
@@ -24,7 +28,7 @@ const EsmeraGlobalStyle = createGlobalStyle`
   body,
   #sanity {
     min-height: 100%;
-    background: ${t.color.ivory};
+    background: ${t.color.canvas};
   }
 
   body,
@@ -43,20 +47,17 @@ const EsmeraGlobalStyle = createGlobalStyle`
     line-height: ${t.typography.body.lineHeight}px;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   ::selection {
-    background: rgba(47, 107, 84, 0.18);
+    background: rgba(73, 107, 89, 0.18);
     color: ${t.color.ink};
   }
 
   :focus-visible {
     outline: 2px solid ${t.color.emerald};
     outline-offset: 2px;
-  }
-
-  [data-ui='Card'] {
-    border-radius: ${t.radius.control}px;
   }
 
   [data-ui='Button'] {
@@ -113,10 +114,7 @@ const EsmeraGlobalStyle = createGlobalStyle`
     box-shadow: ${t.shadow.popover} !important;
   }
 
-  [data-ui='Tooltip'] {
-    border-radius: ${t.radius.control}px;
-  }
-
+  [data-ui='Tooltip'],
   [data-ui='Skeleton'] {
     border-radius: ${t.radius.control}px;
   }
@@ -132,7 +130,7 @@ const EsmeraGlobalStyle = createGlobalStyle`
   }
 
   * {
-    scrollbar-color: ${t.color.lineStrong} ${t.color.ivory};
+    scrollbar-color: ${t.color.lineStrong} ${t.color.canvas};
     scrollbar-width: thin;
   }
 
@@ -142,11 +140,11 @@ const EsmeraGlobalStyle = createGlobalStyle`
   }
 
   *::-webkit-scrollbar-track {
-    background: ${t.color.ivory};
+    background: ${t.color.canvas};
   }
 
   *::-webkit-scrollbar-thumb {
-    border: 3px solid ${t.color.ivory};
+    border: 3px solid ${t.color.canvas};
     border-radius: 999px;
     background: ${t.color.lineStrong};
   }

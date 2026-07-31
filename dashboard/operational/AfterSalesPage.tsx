@@ -1,4 +1,4 @@
-import {useMemo, useState} from 'react'
+import {useState} from 'react'
 import {useClient} from 'sanity'
 import styled from 'styled-components'
 import {esmeraTokens as t} from '../../studio/esmeraTokens'
@@ -46,11 +46,11 @@ export function AfterSalesPage(){
  const overdue=followups.filter((follow)=>follow.status==='pending'&&follow.dueAt&&new Date(follow.dueAt)<today).length
  const incidents=data.filter((item)=>item.incidentType&&item.incidentType!=='none'&&!['resolved','closed'].includes(item.status||'')).length
  const deliveries=data.filter((item)=>!item.deliveredAt&&!['resolved','closed'].includes(item.status||'')).length
- const filtered=useMemo(()=>data.filter((item)=>{
+ const filtered=data.filter((item)=>{
    if(filter==='incident')return Boolean(item.incidentType&&item.incidentType!=='none'&&!['resolved','closed'].includes(item.status||''))
    if(filter==='overdue')return (item.followUps||[]).some((follow)=>follow.status==='pending'&&follow.dueAt&&new Date(follow.dueAt)<today)
    return true
- }),[data,filter])
+ })
  const item=data.find((row)=>row._id===selected)||filtered[0]
  const pending=(item?.followUps||[]).filter((follow)=>follow.status==='pending').sort((a,b)=>String(a.dueAt).localeCompare(String(b.dueAt)))
 
